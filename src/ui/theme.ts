@@ -1,8 +1,20 @@
 /**
- * The anturno CLI's palette (tui-kit's `anturnoTheme`). Structure is a hairline border and a neutral ramp;
- * gold marks only what is live or interactive, and green, amber and red are kept for approval and failure.
+ * The palette: a hairline border and a neutral ramp; gold marks what is live, green/amber/red approval and failure.
+ * Theme detection: NOD_THEME → OSC 11 background query (100 ms) → COLORFGBG → dark.
  */
-export const C = {
+
+export type Palette = {
+  accent: string;
+  foreground: string;
+  mutedForeground: string;
+  muted: string;
+  border: string;
+  success: string;
+  warning: string;
+  error: string;
+};
+
+const DARK: Palette = {
   accent: "#E3B756",
   foreground: "#E6E6E6",
   mutedForeground: "#989898",
@@ -13,20 +25,62 @@ export const C = {
   error: "#EE5C5F",
 };
 
+const LIGHT: Palette = {
+  accent: "#9A6B00",
+  foreground: "#1A1A1A",
+  mutedForeground: "#555555",
+  muted: "#8A8A8A",
+  border: "#C8C8C8",
+  success: "#1E7B45",
+  warning: "#9A6B00",
+  error: "#C0272D",
+};
+
+export const palette = (light: boolean): Palette => (light ? LIGHT : DARK);
+
+/** The live palette the components read. runTui sets it once before rendering. */
+export const C: Palette = { ...DARK };
+export function applyTheme(theme: "dark" | "light") {
+  Object.assign(C, palette(theme === "light"));
+}
+
 export const SPINNER = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏";
 /** 12 fps, as the anturno spinners run. */
 export const SPINNER_INTERVAL = 83;
 
-export type Risk = "low" | "medium" | "high";
-export const RISK_COLOR: Record<Risk, string> = { low: C.success, medium: C.warning, high: C.error };
+export const OSC_BACKGROUND_QUERY = "\x1b]11;?\x07";
+export const THEME_QUERY_TIMEOUT_MS = 100;
 
-/** Mistakes the terminal cannot undo. */
-const DESTRUCTIVE =
-  /\brm\s+-[a-z]*[rf]|\bsudo\b|\bdd\b|\bmkfs|\bchmod\s+777|\bgit\s+push\b.*--force|\bgit\s+reset\s+--hard|\bgit\s+clean\s+-[a-z]*f|\bkill(all)?\b|>\s*\/dev\/|\bcurl\b[^|]*\|\s*(ba)?sh|\bnpm\s+publish\b/;
-/** Reaches the network or changes what is installed. */
-const ELEVATED =
-  /\b(npm|bun|pnpm|yarn)\s+(install|add|remove)\b|\b(curl|wget)\b|\bgit\s+(push|commit|checkout|merge|rebase)\b|\bdocker\b/;
+/** `rgb:RRRR/GGGG/BBBB` (or 8/12-bit variants) → light when luminance > 0.5. */
+export function parseOscBackground(reply: string): "dark" | "light" | null {
+  const m = reply.match(/\]11;rgb:([0-9a-f]+)\/([0-9a-f]+)\/([0-9a-f]+)/i);
+  if (!m) return null;
+  const channel = (hex: string) => Number.parseInt(hex, 16) / (16 ** hex.length - 1);
+  const [r, g, b] = [channel(m[1] as string), channel(m[2] as string), channel(m[3] as string)];
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.5 ? "light" : "dark";
+}
 
-// ponytail: regex heuristic, only so `rm -rf` and `git status` look different; not a sandbox or a policy.
-export const assessRisk = (command: string): Risk =>
-  DESTRUCTIVE.test(command) ? "high" : ELEVATED.test(command) ? "medium" : "low";
+/** COLORFGBG is "fg;bg" with ANSI indexes; a bright background index means light. */
+export function themeFromColorFgBg(value: string | undefined): "dark" | "light" | null {
+  const bg = value?.split(";").at(-1);
+  if (bg === undefined || !/^\d+$/.test(bg)) return null;
+  const n = Number(bg);
+  return n === 7 || n === 15 || (n >= 9 && n <= 15) ? "light" : "dark";
+}
+
+export type ThemeDeps = {
+  env: Record<string, string | undefined>;
+  /** Present only for a real terminal: writes the query and awaits the reply on stdin. */
+  query?: (sequence: string, timeoutMs: number) => Promise<string | null>;
+};
+
+export async function detectTheme(deps: ThemeDeps): Promise<"dark" | "light"> {
+  const forced = deps.env.NOD_THEME?.trim().toLowerCase();
+  if (forced === "light" || forced === "dark") return forced;
+  if (deps.query) {
+    const reply = await deps.query(OSC_BACKGROUND_QUERY, THEME_QUERY_TIMEOUT_MS).catch(() => null);
+    const parsed = reply ? parseOscBackground(reply) : null;
+    if (parsed) return parsed;
+  }
+  return themeFromColorFgBg(deps.env.COLORFGBG) ?? "dark";
+}

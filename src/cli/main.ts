@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { runTui } from "../ui/index.tsx";
 /** `nod`: parses the leading global flags, then dispatches one top-level command. */
 import { runAcp } from "./acp.ts";
 import { runAsk } from "./ask.ts";
@@ -11,17 +12,22 @@ import { type Io, processIo } from "./output.ts";
 import { runSession, runSessions, runUsage, runWorkspace } from "./sessions.ts";
 import { runUpgrade } from "./upgrade.ts";
 
-const NOT_YET = (name: string, io: Io) => {
-  io.stderr(`nod ${name} is not available in this build yet.\n`);
-  return 1;
-};
-
 export async function main(argv: string[], io: Io = processIo()): Promise<number> {
   try {
     const global = parseGlobalArgs(argv);
     const [command, ...args] = global.rest;
-    if (global.resume || command === undefined || command === "resume" || command === "-r")
-      return NOT_YET("interactive shell", io);
+    if (global.resume || command === undefined || command === "resume") {
+      const resumeArgs = command === "resume" ? args.filter((a) => a !== "--upgrade-relaunch") : [];
+      return await runTui({
+        cwd: io.cwd,
+        env: io.env,
+        resume: command === "resume" ? parseResumeArgs(resumeArgs) : global.resume,
+        fullAccess: global.fullAccess,
+        addDirs: global.addDirs,
+        noAdditionalDirs: global.noAdditionalDirs,
+        contextLimits: global.contextLimits,
+      });
+    }
     if (command === "help" || command === "-h" || command === "--help") {
       const spec = args[0] ? findTopLevel(args[0]) : undefined;
       io.stdout(spec ? renderCommandHelp(spec) : renderTopLevelHelp(VERSION));
@@ -85,8 +91,6 @@ export async function main(argv: string[], io: Io = processIo()): Promise<number
     return 1;
   }
 }
-
-export { parseResumeArgs };
 
 if (import.meta.main) {
   process.on("SIGTERM", () => process.exit(143));

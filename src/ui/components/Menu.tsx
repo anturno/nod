@@ -1,35 +1,49 @@
-/** A list with a cursor: the slash commands and the model picker. Stateless; the shell owns the keys. */
+/** A framed list with a cursor, optional title and tab bar: the shape every picker shares. Stateless. */
 import { Box, Text } from "ink";
+import type { ReactNode } from "react";
 import { C } from "../theme.ts";
 
-export type Row = { value: string; hint?: string; shortcut?: string; disabled?: boolean };
+export type Row = { key: string; left: ReactNode; right?: ReactNode; disabled?: boolean };
 
-const MAX_ROWS = 8;
+export const MAX_ROWS = 8;
 
-/** Moves the cursor, skipping disabled rows and stopping at the ends. */
-export function step(rows: Row[], from: number, by: 1 | -1): number {
-  let next = from + by;
-  while (rows[next]?.disabled) next += by;
-  return rows[next] ? next : from;
+export function Tabs({ tabs, active }: { tabs: string[]; active: string }) {
+  return (
+    <Text wrap="truncate-end">
+      {tabs.map((t, i) => (
+        <Text key={t} color={t === active ? C.accent : C.muted} bold={t === active}>
+          {i > 0 ? "  " : ""}
+          {t}
+        </Text>
+      ))}
+    </Text>
+  );
 }
 
-/** `rows` is null while loading. `docked` draws it as the top half of the composer's box. */
 export function Menu({
   rows,
   index,
   title,
+  tabs,
+  footer,
   docked = false,
   borderColor = C.border,
+  maxRows = MAX_ROWS,
+  empty = "nothing to choose",
 }: {
   rows: Row[] | null;
   index: number;
-  title?: string;
+  title?: ReactNode;
+  tabs?: ReactNode;
+  footer?: ReactNode;
   docked?: boolean;
   borderColor?: string;
+  maxRows?: number;
+  empty?: string;
 }) {
-  const start = Math.max(0, Math.min(index - MAX_ROWS / 2, (rows?.length ?? 0) - MAX_ROWS));
-  const visible = rows?.slice(start, start + MAX_ROWS) ?? [];
-  const width = Math.max(0, ...visible.map((r) => r.value.length));
+  const total = rows?.length ?? 0;
+  const start = Math.max(0, Math.min(index - Math.floor(maxRows / 2), total - maxRows));
+  const visible = rows?.slice(start, start + maxRows) ?? [];
   return (
     <Box
       flexDirection="column"
@@ -40,33 +54,35 @@ export function Menu({
       borderBottom={!docked}
       borderColor={borderColor}
       paddingX={1}
-      paddingTop={1}
+      paddingTop={docked ? 0 : 1}
       paddingBottom={docked ? 0 : 1}
     >
-      {title && (
+      {title !== undefined && (
         <Text bold color={C.accent}>
           {title}
         </Text>
       )}
-      {!visible.length && <Text color={C.mutedForeground}>{rows ? "nothing to choose" : "loading…"}</Text>}
+      {tabs}
+      {!visible.length && <Text color={C.mutedForeground}>{rows ? empty : "loading…"}</Text>}
       {visible.map((row, i) => {
         const cursor = start + i === index;
         return (
-          <Box key={row.value}>
+          <Text key={row.key} wrap="truncate-end">
             <Text color={C.accent}>{cursor ? "› " : "  "}</Text>
             <Text bold={cursor} color={row.disabled ? C.muted : cursor ? C.accent : C.foreground}>
-              {row.value.padEnd(width)}
+              {row.left}
             </Text>
-            <Box flexGrow={1} marginLeft={2}>
-              <Text color={C.mutedForeground} wrap="truncate-end">
-                {row.hint}
+            {row.right !== undefined && (
+              <Text color={C.mutedForeground}>
+                {"  "}
+                {row.right}
               </Text>
-            </Box>
-            {row.shortcut && <Text color={C.muted}>{row.shortcut}</Text>}
-          </Box>
+            )}
+          </Text>
         );
       })}
-      {rows && rows.length > visible.length && <Text color={C.muted}>{`  ${index + 1}/${rows.length}`}</Text>}
+      {rows && total > visible.length && <Text color={C.muted}>{`  ${index + 1}/${total}`}</Text>}
+      {footer}
     </Box>
   );
 }
