@@ -1,0 +1,14 @@
+<!doctype html>
+<!-- Same mark as public/favicon.svg, full-bleed so iOS can apply its own mask. Keep the two in sync.
+     Size comes from ?s=180: headless Chrome enforces a minimum window width, so vw units don't match the PNG. -->
+<style>
+  html, body { margin: 0; background: #282828; }
+  svg { display: block; }
+</style>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" fill="#282828"/><path d="M9 16.5l4.5 4.5L23 11" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+<script>
+  const s = new URLSearchParams(location.search).get("s") || "180";
+  const svg = document.querySelector("svg");
+  svg.setAttribute("width", s);
+  svg.setAttribute("height", s);
+</script>

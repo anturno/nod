@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>nod · A coding agent on your ChatGPT or Grok subscription</title>
+  <meta name="description" content="Open source coding agent for your terminal. Runs on the ChatGPT or Grok subscription you already pay for, asks before every command, and fits in an afternoon's reading.">
+  <link rel="canonical" href="%SITE_URL%/">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta name="author" content="Anturno">
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1b1a19">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="nod">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:url" content="%SITE_URL%/">
+  <meta property="og:title" content="nod · A coding agent on the subscription you already pay for">
+  <meta property="og:description" content="Describe a task. nod reads your code, runs your tests and edits the files, on your ChatGPT or Grok plan. No API key, nothing billed per token.">
+  <meta property="og:image" content="%SITE_URL%/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="nod: a coding agent on the subscription you already pay for">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="nod · A coding agent on the subscription you already pay for">
+  <meta name="twitter:description" content="Describe a task. nod reads your code, runs your tests and edits the files, on your ChatGPT or Grok plan. No API key, nothing billed per token.">
+  <meta name="twitter:image" content="%SITE_URL%/og.png">
+  <meta name="twitter:image:alt" content="nod: a coding agent on the subscription you already pay for">
+
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="sitemap" type="application/xml" href="sitemap.xml">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "%SITE_URL%/#website",
+        "url": "%SITE_URL%/",
+        "name": "nod",
+        "inLanguage": "en",
+        "publisher": { "@id": "%SITE_URL%/#org" }
+      },
+      {
+        "@type": "Organization",
+        "@id": "%SITE_URL%/#org",
+        "name": "Anturno",
+        "url": "https://github.com/anturno",
+        "sameAs": ["https://github.com/anturno"]
+      },
+      {
+        "@type": "SoftwareApplication",
+        "@id": "%SITE_URL%/#app",
+        "name": "nod",
+        "url": "%SITE_URL%/",
+        "description": "Open source coding agent for your terminal that runs on your ChatGPT or Grok subscription.",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "macOS, Linux",
+        "softwareRequirements": "Bun 1.4+",
+        "image": "%SITE_URL%/og.png",
+        "license": "https://opensource.org/licenses/MIT",
+        "isAccessibleForFree": true,
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "downloadUrl": "https://github.com/anturno/nod",
+        "installUrl": "https://github.com/anturno/nod#install",
+        "publisher": { "@id": "%SITE_URL%/#org" },
+        "sameAs": ["https://github.com/anturno/nod"]
+      },
+      {
+        "@type": "SoftwareSourceCode",
+        "name": "nod",
+        "codeRepository": "https://github.com/anturno/nod",
+        "programmingLanguage": "TypeScript",
+        "runtimePlatform": ["Bun"],
+        "license": "https://opensource.org/licenses/MIT",
+        "targetProduct": { "@id": "%SITE_URL%/#app" }
+      }
+    ]
+  }
+  </script>
+  <!-- Resolve the theme before first paint so dark mode never flashes white. -->
+  <script>
+    try {
+      const t = localStorage.getItem("theme");
+      if (t === "dark" || (!t && matchMedia("(prefers-color-scheme: dark)").matches)) {
+        document.documentElement.classList.add("dark");
+      }
+    } catch {}
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Fonts load without blocking first paint; the system stack shows until they arrive. -->
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Newsreader:opsz,wght@6..72,400&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Newsreader:opsz,wght@6..72,400&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Newsreader:opsz,wght@6..72,400&display=swap"></noscript>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="min-h-dvh">
+  <a href="#main" class="sr-only rounded-md bg-bg px-3 py-2 text-fg focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50">Skip to content</a>
+
+  <header class="mx-auto flex max-w-page flex-wrap items-center justify-between gap-x-6 gap-y-3 px-6 pt-12 sm:pt-20">
+    <a href="./" class="flex items-baseline gap-2 font-medium text-fg transition-opacity hover:opacity-60">
+      nod
+      <span id="version" class="font-normal tabular-nums text-fg-faint">v0.0.1</span>
+    </a>
+    <div class="flex items-center gap-4">
+      <nav aria-label="Site" class="-mx-2.5 flex items-center gap-0.5">
+        <a href="https://github.com/anturno/nod#readme" class="rounded-full px-2.5 py-1 text-fg-muted transition-colors hover:bg-bg-subtle hover:text-fg">Docs</a>
+        <a href="https://github.com/anturno/nod" class="rounded-full px-2.5 py-1 text-fg-muted transition-colors hover:bg-bg-subtle hover:text-fg">GitHub</a>
+      </nav>
+      <button id="theme" type="button" aria-label="Switch theme" class="-m-1.5 cursor-pointer rounded-md p-1.5 text-fg-muted transition-colors hover:text-fg">
+        <svg class="dark:hidden" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+        <svg class="hidden dark:block" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main id="main" class="mx-auto max-w-page px-6 pt-14 pb-4 sm:pt-20">
+    <section>
+      <h1 class="font-serif text-[2rem] leading-[1.15] tracking-[-0.01em] text-balance text-fg sm:text-[2.5rem]">
+        A coding agent on the subscription you already pay for.
+      </h1>
+      <p class="mt-5 max-w-[32rem] text-pretty text-fg-muted">
+        Describe a task in plain language. nod reads your code, runs your tests, edits the files and tells you when it's done. Sign in with ChatGPT or Grok. No API key, nothing billed per token.
+      </p>
+
+      <div class="mt-8">
+        <div class="flex items-center gap-3 rounded-lg border border-border bg-bg-subtle py-1.5 pr-1.5 pl-4 font-mono text-sm">
+          <span class="select-none text-fg-faint">$</span>
+          <code data-cmd-text class="min-w-0 flex-1 overflow-x-auto whitespace-nowrap text-fg">bun install -g github:anturno/nod</code>
+          <button data-copy type="button" class="cursor-pointer rounded-md px-2.5 py-1 font-sans text-fg-muted transition-colors hover:bg-bg hover:text-fg">Copy</button>
+        </div>
+        <p class="mt-2 text-fg-faint">Requires Bun 1.4+. Then <code class="code">nod login codex</code> or <code class="code">nod login grok</code>.</p>
+      </div>
+    </section>
+
+    <figure class="animate-rise mt-12" style="--delay: 60ms">
+      <figcaption class="sr-only">Example of nod fixing a bug and running the tests</figcaption>
+      <pre class="term"><span class="text-fg-faint">$</span> <span class="text-fg">nod "add() in src/math.ts returns the wrong result. Fix it and run the tests."</span>
+<span class="text-fg">⏺</span> bash<span class="text-fg-faint">(cat src/math.ts)</span>
+<span class="text-fg-faint">  ⎿ export function add(a: number, b: number) { (+3 lines)</span>
+<span class="text-fg">⏺</span> bash<span class="text-fg-faint">(bun test test/math.test.ts)</span>
+<span class="text-fg-faint">  ⎿ exit code 1 (+12 lines)</span>
+<span class="text-fg">⏺</span> bash<span class="text-fg-faint">(sed -i 's/return a - b/return a + b/' src/math.ts)</span>
+<span class="text-fg-faint">  ⎿ (no output)</span>
+<span class="text-fg">⏺</span> bash<span class="text-fg-faint">(bun test)</span>
+<span class="text-fg-faint">  ⎿ bun test v1.4.2 (+8 lines)</span>
+<span class="text-fg">add() subtracted instead of adding. Fixed in src/math.ts; all 14 tests pass.</span></pre>
+    </figure>
+
+    <!-- Rail sections: label in the left gutter, content beside it. -->
+    <section class="animate-rise mt-16 sm:grid sm:grid-cols-[var(--spacing-gutter)_minmax(0,1fr)]" style="--delay: 120ms">
+      <h2 class="mb-2 font-normal text-fg-faint sm:mb-0">Why nod</h2>
+      <ol role="list" class="space-y-4">
+        <li>
+          <p class="text-fg">Uses your subscription</p>
+          <p class="mt-0.5 text-pretty text-fg-muted">Sign in with ChatGPT (Plus, Pro, Business, Enterprise or Edu) or Grok (SuperGrok or X Premium) and start working.</p>
+        </li>
+        <li>
+          <p class="text-fg">You approve every command</p>
+          <p class="mt-0.5 text-pretty text-fg-muted">Each command is shown with a risk level before it runs. Approve it once, allow commands for the session, or deny it.</p>
+        </li>
+        <li>
+          <p class="text-fg">Small enough to trust</p>
+          <p class="mt-0.5 text-pretty text-fg-muted">nod acts only through bash, the same commands you would type. No agent framework, no model SDK, and the whole codebase fits in an afternoon's reading.</p>
+        </li>
+        <li>
+          <p class="text-fg">Switch models mid-conversation</p>
+          <p class="mt-0.5 text-pretty text-fg-muted">Move between ChatGPT and Grok models with <code class="code">/model</code> without losing context.</p>
+        </li>
+        <li>
+          <p class="text-fg">Measured, not guessed</p>
+          <p class="mt-0.5 text-pretty text-fg-muted">An eval suite of real tasks tracks how often the agent succeeds, how many steps it takes, and how much context it uses.</p>
+        </li>
+      </ol>
+    </section>
+
+    <section class="animate-rise mt-14 sm:grid sm:grid-cols-[var(--spacing-gutter)_minmax(0,1fr)]" style="--delay: 160ms">
+      <h2 class="mb-2 font-normal text-fg-faint sm:mb-0">Approval</h2>
+      <div>
+        <p class="text-pretty text-fg-muted">Nothing runs until you say so, and each command shows its risk level first.</p>
+        <pre class="term mt-4"><span class="text-fg">Approval required</span>  <span class="text-accent">[LOW RISK]</span>
+
+bash  <span class="text-fg">bun test</span>
+
+<span class="text-fg">[y] once</span>  <span class="text-fg">[a] session</span>  <span class="text-fg">[n] deny</span></pre>
+      </div>
+    </section>
+
+    <section class="animate-rise mt-14 sm:grid sm:grid-cols-[var(--spacing-gutter)_minmax(0,1fr)]" style="--delay: 200ms">
+      <h2 class="mb-2 font-normal text-fg-faint sm:mb-0 sm:pt-1.5">Shell</h2>
+      <ul role="list">
+        <li class="py-2 sm:flex sm:items-baseline sm:justify-between sm:gap-4 sm:py-1.5"><code class="code shrink-0">/model</code><span class="block text-fg-faint sm:text-right">Switch model, keep the conversation</span></li>
+        <li class="py-2 sm:flex sm:items-baseline sm:justify-between sm:gap-4 sm:py-1.5"><code class="code shrink-0">/clear</code><span class="block text-fg-faint sm:text-right">Start a fresh conversation</span></li>
+        <li class="py-2 sm:flex sm:items-baseline sm:justify-between sm:gap-4 sm:py-1.5"><code class="code shrink-0">/verbose</code><span class="block text-fg-faint sm:text-right">Expand command output and reasoning</span></li>
+        <li class="py-2 sm:flex sm:items-baseline sm:justify-between sm:gap-4 sm:py-1.5"><code class="code shrink-0">esc</code><span class="block text-fg-faint sm:text-right">Interrupt the agent</span></li>
+        <li class="py-2 sm:flex sm:items-baseline sm:justify-between sm:gap-4 sm:py-1.5"><code class="code shrink-0">/exit</code><span class="block text-fg-faint sm:text-right">Quit</span></li>
+      </ul>
+    </section>
+
+    <section class="animate-rise mt-14 sm:grid sm:grid-cols-[var(--spacing-gutter)_minmax(0,1fr)]" style="--delay: 240ms">
+      <h2 class="mb-2 font-normal text-fg-faint sm:mb-0">How it works</h2>
+      <div>
+        <p class="text-pretty text-fg-muted">A loop around a model with two tools: <code class="code">bash</code> to act and <code class="code">task_complete</code> to finish. Every command starts in a fresh shell, and its exit code and output go back to the model so it can recover from its own mistakes.</p>
+        <pre class="term mt-4"><span class="text-fg">while</span> (true) {
+  const { content, toolCalls } = yield* llm.stream(messages, tools);
+
+  if (calledTaskComplete)  return done(<span class="text-fg">"task_complete"</span>);
+  if (aborted)             return done(<span class="text-fg">"interrupted"</span>);
+  if (turn >= maxTurns)    return done(<span class="text-fg">"max_turns"</span>);
+}</pre>
+      </div>
+    </section>
+
+    <section class="animate-rise mt-14 sm:grid sm:grid-cols-[var(--spacing-gutter)_minmax(0,1fr)]" style="--delay: 280ms">
+      <h2 class="mb-2 font-normal text-fg-faint sm:mb-0 sm:pt-1.5">CLI</h2>
+      <ul role="list">
+        <li class="py-2 sm:flex sm:items-baseline sm:justify-between sm:gap-4 sm:py-1.5"><code class="code shrink-0">nod</code><span class="block text-fg-faint sm:text-right">Open the interactive shell</span></li>
+        <li class="py-2 sm:flex sm:items-baseline sm:justify-between sm:gap-4 sm:py-1.5"><code class="code shrink-0">nod "&lt;task&gt;"</code><span class="block text-fg-faint sm:text-right">Run one task and exit, for scripts and CI</span></li>
+        <li class="py-2 sm:flex sm:items-baseline sm:justify-between sm:gap-4 sm:py-1.5"><code class="code shrink-0">nod login</code><span class="block text-fg-faint sm:text-right">Sign in with codex or grok</span></li>
+        <li class="py-2 sm:flex sm:items-baseline sm:justify-between sm:gap-4 sm:py-1.5"><code class="code shrink-0">nod models</code><span class="block text-fg-faint sm:text-right">Models your plan can use</span></li>
+        <li class="py-2 sm:flex sm:items-baseline sm:justify-between sm:gap-4 sm:py-1.5"><code class="code shrink-0">--yes</code><span class="block text-fg-faint sm:text-right">Run commands without asking</span></li>
+      </ul>
+    </section>
+
+    <section class="animate-rise mt-14 sm:grid sm:grid-cols-[var(--spacing-gutter)_minmax(0,1fr)]" style="--delay: 320ms">
+      <h2 class="mb-2 font-normal text-fg-faint sm:mb-0">Subscriptions</h2>
+      <p class="text-pretty text-fg-muted">Sign-in uses the OAuth clients of OpenAI's Codex CLI and xAI's Grok CLI against their subscription backends. These aren't public APIs and can change without notice. Tokens stay in <code class="code">~/.nod</code> on your machine. You're responsible for following each provider's terms.</p>
+    </section>
+  </main>
+
+  <footer class="mx-auto max-w-page px-6 pt-24 pb-20">
+    <div class="flex flex-wrap gap-x-4 gap-y-1 text-fg-faint">
+      <a href="https://github.com/anturno/nod" class="transition-colors hover:text-fg">GitHub</a>
+      <a href="https://github.com/anturno/nod#contributing" class="transition-colors hover:text-fg">Contribute</a>
+      <a href="https://github.com/anturno/nod#evals" class="transition-colors hover:text-fg">Evals</a>
+    </div>
+    <p class="mt-8 text-fg-faint">MIT License · <a href="https://github.com/anturno" class="transition-colors hover:text-fg">Anturno</a></p>
+  </footer>
+
+  <script src="main.js" defer></script>
+</body>
+</html>

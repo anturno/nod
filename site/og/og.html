@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Newsreader:opsz,wght@6..72,400&display=block" rel="stylesheet">
+  <style>
+    * { margin: 0; box-sizing: border-box; }
+    html, body { width: 1200px; height: 630px; overflow: hidden; }
+    body {
+      background: #fff; color: #282828;
+      font-family: Inter, system-ui, sans-serif;
+      padding: 88px 96px;
+      display: flex; flex-direction: column; justify-content: space-between;
+    }
+    .top { display: flex; align-items: baseline; gap: 14px; font-size: 30px; font-weight: 500; }
+    .top span { color: #676767; font-weight: 400; }
+    h1 {
+      font-family: Newsreader, Georgia, serif; font-weight: 400;
+      font-size: 84px; line-height: 1.05; letter-spacing: -0.015em; max-width: 960px;
+    }
+    .cmd {
+      display: inline-flex; gap: 18px; align-self: flex-start;
+      font: 28px ui-monospace, "SF Mono", Menlo, monospace;
+      background: #f3f3f2; border: 1px solid #e2e2df; border-radius: 14px; padding: 18px 28px;
+    }
+    .cmd span { color: #676767; }
+  </style>
+</head>
+<body>
+  <div class="top">nod <span>for ChatGPT and Grok subscriptions</span></div>
+  <h1>A coding agent on the subscription you already pay for.</h1>
+  <div class="cmd"><span>$</span>bun install -g github:anturno/nod</div>
+</body>
+</html>
