@@ -1,6 +1,6 @@
 /** A list with a cursor: the slash commands and the model picker. Stateless; the shell owns the keys. */
 import { Box, Text } from "ink";
-import { C } from "./theme.ts";
+import { C } from "../theme.ts";
 
 export type Row = { value: string; hint?: string; shortcut?: string; disabled?: boolean };
 

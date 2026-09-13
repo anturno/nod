@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * Runs the eval tasks against a real model and reports effectiveness (did the check pass) and efficiency (turns,
+ * Runs the eval tasks against a real model and reports effectiveness (did the check pass) and efficiency (steps,
  * commands, failed commands, time, and the context the conversation grew to).
  *
  *   bun run eval                           every task once, on the default model
@@ -11,15 +11,17 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
-import { Agent, type DoneReason, type LLM, systemPrompt } from "../src/agent.ts";
-import { localEnvironment } from "../src/environment.ts";
-import { pickModel } from "../src/providers.ts";
+import { assembleRuntime, type ModelBinding } from "../src/cli/runtime.ts";
+import type { LLM } from "../src/core/agent/types.ts";
+import { loadConfig } from "../src/core/config/resolve.ts";
+import { resolveAccess } from "../src/core/workspace/access.ts";
+import { isSubscription, pickModel, type Subscription } from "../src/providers/providers.ts";
 import { type Exec, TASKS, type Task } from "./tasks.ts";
 
 export type Result = {
   task: string;
   pass: boolean;
-  reason: DoneReason | "error";
+  reason: "completed" | "interrupted" | "paused" | "failed" | "error";
   /** Model requests. */
   turns: number;
   commands: number;
@@ -31,130 +33,149 @@ export type Result = {
   answer: string;
 };
 
+export async function exec(cwd: string, command: string): Promise<{ output: string; exitCode: number | null }> {
+  const proc = Bun.spawn(["bash", "-c", command], { cwd, stdout: "pipe", stderr: "pipe" });
+  const [out, err] = await Promise.all([new Response(proc.stdout).text(), new Response(proc.stderr).text()]);
+  return { output: (out + err).trim(), exitCode: await proc.exited };
+}
+
 /** A fresh directory holding the task's files. */
 export async function workspace(task: Task): Promise<{ cwd: string; exec: Exec; dispose: () => Promise<void> }> {
   const cwd = await mkdtemp(join(tmpdir(), `nod-eval-${task.name}-`));
   await Promise.all(Object.entries(task.files).map(([path, content]) => Bun.write(join(cwd, path), content)));
-  const env = localEnvironment({ cwd });
-  return { cwd, exec: (command) => env.execute(command), dispose: () => rm(cwd, { recursive: true, force: true }) };
+  return { cwd, exec: (command) => exec(cwd, command), dispose: () => rm(cwd, { recursive: true, force: true }) };
 }
 
-export async function runTask(task: Task, llm: LLM, maxTurns = 20): Promise<Result> {
+/** A subscription whose only model is the given LLM: what tests and the runner hand to the runtime. */
+export const binding = (llm: LLM, model = "eval-model"): ModelBinding => {
+  const sub: Subscription = {
+    label: "eval",
+    login: async () => {},
+    logout: async () => "",
+    signedIn: () => true,
+    models: async () => [model],
+    llm: () => llm,
+  };
+  return { provider: "codex", model, sub, listed: [model] };
+};
+
+export async function runTask(task: Task, model: ModelBinding, maxSteps = 20): Promise<Result> {
   const ws = await workspace(task);
+  const home = await mkdtemp(join(tmpdir(), "nod-eval-home-"));
   try {
     let turns = 0;
+    let context = 0;
     let answer = "";
+    const inner = model.sub.llm(model.model);
     // Each request starts a new line of the answer, so two replies do not run together.
     const counted: LLM = {
-      stream: (messages, tools, signal) => (turns++, (answer += "\n"), llm.stream(messages, tools, signal)),
+      stream: (messages, tools, signal, options) => {
+        turns++;
+        answer += "\n";
+        context = messages.reduce((n, m) => n + m.content.length, 0);
+        return inner.stream(messages, tools, signal, options);
+      },
     };
-    // No approval: the workspace is a throwaway directory.
-    const agent = new Agent({
-      llm: counted,
-      env: localEnvironment({ cwd: ws.cwd }),
-      system: systemPrompt(process.platform),
-      maxTurns,
+    const config = loadConfig({
+      workspaceRoot: ws.cwd,
+      env: { NOD_HOME: home, NOD_MAX_AGENT_STEPS: String(maxSteps) },
     });
+    // No approval: the workspace is a throwaway directory.
+    const runtime = await assembleRuntime(
+      {
+        config,
+        access: resolveAccess({ cwd: ws.cwd }, []),
+        sessionId: "eval",
+        sessionDir: join(home, "session"),
+        history: [],
+        interactive: false,
+        permissionMode: "yolo",
+      },
+      { ...model, sub: { ...model.sub, llm: () => counted } },
+    );
     const started = performance.now();
     let commands = 0;
     let failedCommands = 0;
     let reason: Result["reason"] = "error";
     try {
-      for await (const event of agent.run(task.prompt)) {
-        // Graded on everything shown: a task_complete summary can follow, and replace, a plain answer.
-        if (event.type === "text") answer += event.text;
-        if (event.type === "done" && event.reason !== "answered") answer += `\n${event.message}`;
-        if (event.type === "command") commands++;
-        if (event.type === "observation" && !event.output.startsWith("exit code 0")) failedCommands++;
-        if (event.type === "done") reason = event.reason;
+      const gen = runtime.loop.run({ text: task.prompt });
+      for (;;) {
+        const next = await gen.next();
+        if (next.done) {
+          reason = next.value.kind;
+          if (next.value.kind === "failed") answer += `\n${next.value.error}`;
+          break;
+        }
+        const ev = next.value;
+        if (ev.type === "text") answer += ev.text;
+        if (ev.type === "tool_started" && ev.call.name === "shell") commands++;
+        if (ev.type === "tool_finished" && ev.call.name === "shell" && ev.result.status !== "success") failedCommands++;
       }
     } catch (e) {
       answer += `\n${(e as Error).message}`;
+    } finally {
+      await runtime.close();
     }
     const seconds = (performance.now() - started) / 1000;
     answer = answer.trim();
     const pass = reason !== "error" && (await task.check({ exec: ws.exec, answer }));
-    return {
-      task: task.name,
-      pass,
-      reason,
-      turns,
-      commands,
-      failedCommands,
-      seconds,
-      context: JSON.stringify(agent.messages).length,
-      answer,
-    };
+    return { task: task.name, pass, reason, turns, commands, failedCommands, seconds, context, answer };
   } finally {
     await ws.dispose();
+    await rm(home, { recursive: true, force: true });
   }
 }
 
 const median = (xs: number[]) => {
-  const sorted = xs.toSorted((a, b) => a - b);
-  const mid = sorted.length >> 1;
-  return sorted.length % 2 ? sorted[mid]! : (sorted[mid - 1]! + sorted[mid]!) / 2;
+  const s = [...xs].sort((a, b) => a - b);
+  return s.length === 0 ? 0 : (s[(s.length - 1) >> 1] as number);
 };
 
-/** Medians per task, so one slow run does not hide the typical one. */
-export function summarize(results: Result[]) {
-  const row = (name: string, runs: Result[]) => ({
-    task: name,
-    pass: `${runs.filter((r) => r.pass).length}/${runs.length}`,
-    turns: median(runs.map((r) => r.turns)),
-    commands: median(runs.map((r) => r.commands)),
-    failed: median(runs.map((r) => r.failedCommands)),
-    seconds: Number(median(runs.map((r) => r.seconds)).toFixed(1)),
-    "context kB": Number((median(runs.map((r) => r.context)) / 1000).toFixed(1)),
+/** One line per task: pass rate and median efficiency across its runs. */
+export function summarize(results: Result[]): string {
+  const byTask = new Map<string, Result[]>();
+  for (const r of results) byTask.set(r.task, [...(byTask.get(r.task) ?? []), r]);
+  const rows = [...byTask].map(([task, rs]) => {
+    const passed = rs.filter((r) => r.pass).length;
+    return [
+      task.padEnd(16),
+      `${passed}/${rs.length}`.padStart(5),
+      `${median(rs.map((r) => r.turns))} turns`.padStart(9),
+      `${median(rs.map((r) => r.commands))} cmds`.padStart(8),
+      `${median(rs.map((r) => r.failedCommands))} failed`.padStart(9),
+      `${median(rs.map((r) => r.seconds)).toFixed(0)}s`.padStart(5),
+      `${median(rs.map((r) => r.context))} chars`.padStart(12),
+    ].join("  ");
   });
-  const names = [...new Set(results.map((r) => r.task))];
-  return [
-    ...names.map((name) =>
-      row(
-        name,
-        results.filter((r) => r.task === name),
-      ),
-    ),
-    row("all", results),
-  ];
+  const total = results.filter((r) => r.pass).length;
+  return [...rows, `total ${total}/${results.length}`].join("\n");
 }
 
 if (import.meta.main) {
   const { values, positionals } = parseArgs({
-    allowPositionals: true,
+    args: process.argv.slice(2),
     options: {
+      repeat: { type: "string", default: "1" },
       provider: { type: "string" },
       model: { type: "string" },
-      repeat: { type: "string", default: "1" },
-      concurrency: { type: "string", default: "4" },
+      concurrency: { type: "string", default: "1" },
     },
+    allowPositionals: true,
   });
+  if (values.provider !== undefined && !isSubscription(values.provider))
+    throw new Error(`unknown provider ${values.provider}`);
+  const picked = await pickModel(values.provider, values.model);
+  const model: ModelBinding = { ...picked, listed: [picked.model] };
   const tasks = positionals.length ? TASKS.filter((t) => positionals.includes(t.name)) : TASKS;
-  if (!tasks.length)
-    throw new Error(`No task named ${positionals.join(", ")}. Tasks: ${TASKS.map((t) => t.name).join(", ")}`);
-  const { provider, model, sub } = await pickModel(values.provider, values.model);
-  const queue = tasks.flatMap((task) => Array.from({ length: Number(values.repeat) }, () => task));
-  console.log(`${provider}/${model} · ${queue.length} runs\n`);
-
+  const queue = tasks.flatMap((t) => Array.from({ length: Number(values.repeat) }, () => t));
   const results: Result[] = [];
-  const worker = async () => {
-    // One LLM per run, so concurrent runs never share a provider session.
-    for (let task = queue.shift(); task; task = queue.shift()) {
-      const r = await runTask(task, sub.llm(model));
+  const workers = Array.from({ length: Number(values.concurrency) }, async () => {
+    for (let t = queue.shift(); t; t = queue.shift()) {
+      const r = await runTask(t, model);
       results.push(r);
-      console.log(
-        `${r.pass ? "✓" : "✗"} ${r.task.padEnd(12)} ${r.reason.padEnd(13)} ${r.turns} turns · ${r.commands} cmds · ${r.seconds.toFixed(1)}s`,
-      );
-      if (!r.pass) console.log(`  ⎿ ${r.answer.replaceAll("\n", " ").slice(0, 200)}`);
+      console.log(`${r.pass ? "PASS" : "FAIL"} ${r.task} (${r.reason}, ${r.turns} turns, ${r.seconds.toFixed(0)}s)`);
     }
-  };
-  await Promise.all(Array.from({ length: Number(values.concurrency) }, worker));
-
-  console.log();
-  console.table(
-    summarize(
-      results.toSorted((a, b) => TASKS.findIndex((t) => t.name === a.task) - TASKS.findIndex((t) => t.name === b.task)),
-    ),
-  );
-  if (results.some((r) => !r.pass)) process.exitCode = 1;
+  });
+  await Promise.all(workers);
+  console.log(`\n${summarize(results)}`);
 }

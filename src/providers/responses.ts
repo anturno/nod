@@ -41,7 +41,10 @@ export function buildBody(
     if (m.role === "tool") return [{ type: "function_call_output", call_id: m.toolCallId, output: m.content }];
     if (m.role !== "assistant") {
       if (m.role !== "user") return [];
-      const images = (m.images ?? []).map((i) => ({ type: "input_image", image_url: `data:${i.mime};base64,${i.data}` }));
+      const images = (m.images ?? []).map((i) => ({
+        type: "input_image",
+        image_url: `data:${i.mime};base64,${i.data}`,
+      }));
       return [{ role: "user", content: [{ type: "input_text", text: m.content }, ...images] }];
     }
     const text = m.content

@@ -60,7 +60,7 @@ export type ToolContext = {
   /** Additional directories tools may reach. */
   additionalDirectories: string[];
   /** Services other modules provide. Absent means the capability is unavailable in this host. */
-  shell?: import("../shell/manager.ts").ShellManager;
+  shell?: import("../shell/types.ts").ShellManager;
   askUser?: AskUser;
   skills?: import("../skills/types.ts").SkillService;
   mcp?: import("../mcp/types.ts").McpService;
