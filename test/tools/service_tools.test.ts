@@ -106,14 +106,10 @@ describe("skills tools", () => {
       },
     });
     const result = await skills.callSearch(decodeOk(skills.decodeSearch({ query: "deploy" })), ctx);
-    expect(JSON.parse(result.output)).toEqual({
+    expect(JSON.parse(result.output)).toMatchObject({
       skills: [{ name: "a", location: "/skills/a", description: "about deploy", score: 0.5 }],
-      count: 1,
-      total_matches: 1,
-      more_available: false,
-      next_cursor: null,
-      tools: ["mcp_srv_tool"],
-      tool_count: 1,
+      counts: { skills: 1 },
+      total_matches: { skills: 1 },
     });
   });
 });

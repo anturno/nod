@@ -1,11 +1,15 @@
 #!/usr/bin/env bun
 /** `nod`: parses the leading global flags, then dispatches one top-level command. */
+import { runAcp } from "./acp.ts";
 import { runAsk } from "./ask.ts";
 import { findTopLevel, renderCommandHelp, renderTopLevelHelp } from "./commands.ts";
+import { runIssue, runPr } from "./github.ts";
 import { CliUsageError, parseGlobalArgs, parseResumeArgs } from "./global-args.ts";
 import { runDoctor, runLogin, runLogout, runModels, runPermissions, runProvider, runStatus, VERSION } from "./info.ts";
+import { runMcp } from "./mcp.ts";
 import { type Io, processIo } from "./output.ts";
 import { runSession, runSessions, runUsage, runWorkspace } from "./sessions.ts";
+import { runUpgrade } from "./upgrade.ts";
 
 const NOT_YET = (name: string, io: Io) => {
   io.stderr(`nod ${name} is not available in this build yet.\n`);
@@ -59,12 +63,16 @@ export async function main(argv: string[], io: Io = processIo()): Promise<number
         return runUsage(args, io);
       case "workspace":
         return runWorkspace(args, io, global);
-      case "mcp":
       case "pr":
+        return await runPr(args, io, global);
       case "issue":
-      case "acp":
+        return await runIssue(args, io, global);
       case "upgrade":
-        return NOT_YET(command, io);
+        return await runUpgrade(args, io);
+      case "mcp":
+        return await runMcp(args, io);
+      case "acp":
+        return await runAcp(args, io, global);
       default:
         throw new CliUsageError("UnknownCommand", `unknown command: ${command}\n\n${renderTopLevelHelp(VERSION)}`);
     }

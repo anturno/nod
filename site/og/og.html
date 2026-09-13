@@ -20,7 +20,7 @@
     }
     .cmd {
       display: inline-flex; gap: 18px; align-self: flex-start;
-      font: 28px ui-monospace, "SF Mono", Menlo, monospace;
+      font: 26px ui-monospace, "SF Mono", Menlo, monospace;
       background: #f3f3f2; border: 1px solid #e2e2df; border-radius: 14px; padding: 18px 28px;
     }
     .cmd span { color: #676767; }
@@ -29,6 +29,6 @@
 <body>
   <div class="top">nod <span>for ChatGPT and Grok subscriptions</span></div>
   <h1>A coding agent on the subscription you already pay for.</h1>
-  <div class="cmd"><span>$</span>bun install -g github:anturno/nod</div>
+  <div class="cmd"><span>$</span>curl -fsSL https://nod.anturno.cloud/setup.sh | bash</div>
 </body>
 </html>

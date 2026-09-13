@@ -177,7 +177,9 @@ export class AgentLoop {
   }
 
   async *run(prompt: UserTurn, signal?: AbortSignal): AsyncGenerator<AgentEvent, TurnOutcome> {
-    const { config, llm, tools, deps } = { ...this.deps, deps: this.deps };
+    const { config, llm, deps } = { ...this.deps, deps: this.deps };
+    // MCP tools come and go between steps (select/list_changed), so the list is rebuilt per request.
+    const toolsNow = () => [...this.deps.tools, ...(this.deps.toolContext.mcp?.tools() ?? [])];
     const execution = new Execution();
     const withinTurn: Message[] = [];
     let step = 0;
@@ -235,6 +237,7 @@ export class AgentLoop {
       let content = "";
       let toolCalls: ToolCall[] = [];
       try {
+        const tools = toolsNow();
         const stream = llm.stream(messages, tools, signal, {
           providerTools: deps.providerTools,
           effort: config.effort,
@@ -315,7 +318,7 @@ export class AgentLoop {
 
       withinTurn.push({ role: "assistant", content, toolCalls });
       silentToolSteps = content.trim().length > 0 ? 0 : silentToolSteps + 1;
-      const admissions = toolCalls.map((call) => admit(call, this.deps.toolContext, tools));
+      const admissions = toolCalls.map((call) => admit(call, this.deps.toolContext, toolsNow()));
       const allMalformed = admissions.every((a) => !a.ok && a.malformed);
       malformedSteps = allMalformed ? malformedSteps + 1 : 0;
       const shellInvalid = admissions.length > 0 && admissions.every((a) => !a.ok && a.spec?.name === "shell");
@@ -514,6 +517,7 @@ export class AgentLoop {
     const cwdInside = !targets.some((t) => t.kind === "path" && t.external);
     const outcome = await decidePermission({
       toolName: spec.name,
+      isMcpTool: !this.deps.tools.includes(spec),
       spec,
       targets,
       readsOnly: spec.readsOnly?.(input) ?? false,

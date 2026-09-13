@@ -6,114 +6,116 @@
 
 Website: [nod.anturno.cloud](https://nod.anturno.cloud)
 
-Describe a task in plain language. nod reads your code, runs your tests, edits the files, and tells you when it's done. It asks before every command it runs, and you can stop it at any time. You don't need an API key, and nothing is billed per token.
+nod is a TypeScript port of [vercel-labs/fx](https://github.com/vercel-labs/fx): a coding agent CLI whose interface stays closer to a Unix shell than an IDE in the terminal. It reads and edits files, runs commands in the background, searches the web, follows skills, talks to MCP servers, delegates to subagents, and asks before it acts. Sessions are saved locally and can be resumed. There is no API key and nothing is billed per token.
 
 ```bash
-nod "add() in src/math.ts returns the wrong result. Fix it and run the tests."
+nod ask "add() in src/math.ts returns the wrong result. Fix it and run the tests."
 ```
-
-## Why nod
-
-- **Uses your subscription.** Sign in with ChatGPT (Plus, Pro, Business, Enterprise or Edu) or Grok (SuperGrok or X Premium) and start working.
-- **You approve every command.** Each command is shown with a risk level before it runs. Approve it once, allow commands for the rest of the session, or deny it.
-- **Small enough to trust.** nod acts only through bash, the same commands you would type yourself. There's no agent framework and no model SDK, and the whole codebase fits in an afternoon's reading.
-- **Switch models mid-conversation.** Move between ChatGPT and Grok models without losing context.
-- **Measured, not guessed.** An eval suite of real tasks tracks how often the agent succeeds, how many steps it takes, and how much context it uses.
 
 ## Install
 
-Requires [Bun](https://bun.sh) 1.4 or later.
+```bash
+curl -fsSL https://nod.anturno.cloud/setup.sh | bash
+```
+
+The installer downloads a prebuilt binary for macOS or Linux (x86_64 and aarch64) from [GitHub Releases](https://github.com/anturno/nod/releases), verifies its checksum, installs it to `~/.local/bin` (or `NOD_INSTALL_DIR`), and adds that directory to your `PATH` if needed. Pass a version to pin it: `curl -fsSL https://nod.anturno.cloud/setup.sh | bash -s -- v0.1.0`.
+
+If you have [Bun](https://bun.sh) 1.4 or later, you can run it from source instead:
 
 ```bash
 bun install -g github:anturno/nod
 ```
 
-```bash
-nod login codex     # ChatGPT
-```
+Then sign in with one of your subscriptions. Login opens your browser; for Grok you can also paste the code xAI shows you.
 
 ```bash
-nod login grok      # Grok
+nod login codex     # ChatGPT: Plus, Pro, Business, Enterprise or Edu
+nod login grok      # Grok: SuperGrok or X Premium
 ```
-
-Login opens your browser. For Grok, you can also paste the code xAI shows you.
 
 ## Use it
 
-Run `nod` in a project to open the interactive shell:
+Run `nod` inside a project to open the interactive shell:
 
 ```bash
+cd your_project
 nod
 ```
 
-Or give it a single task. It prints plain output and exits, which suits scripts and CI:
+Or make a one-shot request. `--json` prints a machine-readable result, which suits scripts and CI:
 
 ```bash
-nod "rename getUser to fetchUser across the codebase"
+nod ask "explain the changes in this repository"
+nod ask --json "list the files in src"
 ```
+
+Inside the shell, run `/help` to browse the interactive commands.
+
+## What nod can do
+
+- **Tools.** `read_file`, `write_file`, `edit_file`, `glob_files`, `grep_files`, `shell` (background processes with handles, interactive input, stop), `web_fetch`, `web_search`, `vision`, `ask_user_question`, `read_tool_result`, `skill`, `install_skill`, `subagent`, and MCP tools discovered at runtime (`capability_search`, `mcp_select_tool`, `mcp_features`).
+- **Permissions.** Three modes: `ask` prompts before every mutating action, `auto` (default) lets a helper model approve routine, reversible commands and asks for the rest, and `full-access` disables the checks. Per-tool `allow` / `ask` / `deny` rules with wildcards live in `~/.nod/settings.json`, globally and per workspace, and "don't ask again" grants last for the session.
+- **Sessions.** Every conversation is saved under `~/.nod/sessions/`. Resume the last one with `nod -c`, pick one with `nod -r`, or continue a specific id with `nod resume <id>`. Interrupted turns are checkpointed and can be recovered; long conversations are compacted automatically.
+- **Context.** `AGENTS.md` files (global, workspace, and nested) are added to the prompt, with per-file limits you can tune with `--context-limit`.
+- **Skills.** `SKILL.md` folders in your workspace or `~/.nod/skills` are advertised to the model; install more from GitHub, a local path, or skills.sh with `/skills install`.
+- **MCP.** Add stdio, streamable HTTP, or SSE servers with `nod mcp add`, or drop a `.mcp.json` in the workspace (Claude-compatible). Workspace servers stay pending until you trust them.
+- **Editors and hosts.** `nod acp` runs an [Agent Client Protocol](https://agentclientprotocol.com) server over stdio for editors. The `nod/sdk` export gives JavaScript hosts `createAgent()` and `createTerminal()` with their own transport, storage, and permission handling.
+- **Git.** `nod pr` and `nod issue` draft (and with `--create`, publish through `gh`) a pull request or issue from the current changes.
+
+## Commands
+
+| Command | What it does |
+|---------|--------------|
+| `nod` | Open the interactive shell |
+| `nod ask [flags] <prompt>` | Run one noninteractive request (`--json`, `--quiet`, `--image`, `--system`, `--no-save`, `--resume last\|<id>`, `--auto`, `--full-access`) |
+| `nod resume [last\|<id>]`, `nod -c`, `nod -r` | Continue a saved interactive session |
+| `nod sessions`, `nod session <last\|id>` | List and inspect saved sessions (`--json`) |
+| `nod login [codex\|grok]`, `nod logout`, `nod provider <codex\|grok>`, `nod models` | Manage subscriptions and the active model |
+| `nod permissions`, `nod workspace list\|add\|remove\|clear` | Show permission rules; manage additional directories |
+| `nod mcp add\|list\|auth\|logout\|path\|remove\|trust` | Manage MCP servers |
+| `nod pr`, `nod issue` | Draft or publish a pull request or issue |
+| `nod status`, `nod doctor`, `nod usage [--period 24h\|7d\|30d]` | Configuration, health checks, and local token usage |
+| `nod acp` | Start an ACP server over stdio |
+| `nod upgrade [--channel stable\|dev]` | Upgrade the binary from GitHub Releases and remember the channel |
+
+Global flags go before the command: `--full-access` (or `--yolo`), `--add-dir <path>`, `--no-additional-dirs`, `--context-limit <key>=<bytes|off>`.
 
 ### In the shell
 
-Type `/` to see the commands. `tab` completes a command and `enter` runs it.
-
-| Command | Key | What it does |
-|---------|-----|--------------|
-| `/model` | | Switch to another model from any subscription you're signed in to, keeping the conversation |
-| `/clear` | `ctrl+l` | Start a fresh conversation |
-| `/verbose` | `ctrl+o` | Expand or collapse command output and reasoning |
-| `/exit` | `ctrl+c` | Quit (`ctrl+c` interrupts a running turn first) |
+Type `/` to see the commands: `/help /new /resume /rename /compact /model /models /provider /login /permissions /settings /status /usage /skills /mcp /workspace /image /paste /copy /undo /quit`. `tab` completes and `enter` runs.
 
 | Key | What it does |
 |-----|--------------|
-| `y` / `a` / `n` | Approve a command once, allow commands for the session, or deny it |
-| `esc` | Interrupt the agent |
-| `↑` / `↓` | Recall past messages |
-| Mouse wheel, `PageUp` / `PageDown`, `shift+↑` / `shift+↓` | Scroll the conversation |
+| `enter` during a turn | Queue the draft as a follow-up for the next model request |
+| `esc` | Cancel the running turn (double `esc` clears the draft when idle) |
+| `ctrl+c` | Clear the draft, then press again within 3 s to save and exit |
+| `shift+tab` | Cycle the permission mode: `ask` → `auto` → `full access` |
+| `ctrl+o` | Open the full transcript |
+| `ctrl+g` | Relaunch into an update the shell installed in the background |
+| `$` / `@` / `/` | Pick a skill, a file, or a command |
 
-### Options
+### Configuration
 
-| Option | What it does |
-|--------|--------------|
-| `--provider codex\|grok` | Choose the subscription. The default is the one you signed in to (or `NOD_PROVIDER`) |
-| `--model <id>` | Choose the model. The default is `gpt-5.6-luna` on ChatGPT, or the first model your plan lists |
-| `--yes` | Run commands without asking |
-
-```bash
-nod models codex    # models your plan can use
-```
-
-```bash
-nod logout codex
-```
-
-### Environment variables
+Settings live in `~/.nod/settings.json` (per-workspace overrides under `workspaces`) and in a `.nod.json` at the project root. Useful keys: `provider`, `models`, `permission_mode`, `permission` rules, `max_agent_steps`, `effort`, `context_limits`, `auto_upgrade`, `update_channel`, `notifications`, `prompt_history`.
 
 | Variable | What it does |
 |----------|--------------|
-| `NOD_HOME` | Where sign-in tokens are stored (default `~/.nod`, files are mode 0600 and refreshed automatically) |
-| `NOD_PROVIDER` | Default subscription |
+| `NOD_HOME` | Where settings, sessions, skills, and sign-in tokens are stored (default `~/.nod`) |
+| `NOD_PROVIDER`, `NOD_MODEL` | Default subscription and model |
+| `NOD_PERMISSION_MODE` | `ask`, `auto`, or `full-access` |
+| `NOD_MAX_AGENT_STEPS` | Stop a turn after this many tool steps (`0` = unlimited) |
+| `NOD_AUTO_UPGRADE=0` | Skip automatic upgrade checks in the interactive shell |
+| `NOD_THEME`, `NOD_SOUND` | Force `light`/`dark`; enable or silence notification sounds |
 | `NOD_NO_OPEN_BROWSER=1` | Print the login URL instead of opening a browser |
 
-## How it works
+## Upgrade
 
-nod is a loop around a model with two tools: `bash` to act and `task_complete` to finish. Reading, searching, editing and testing are all bash commands.
-
-- **Every command starts fresh.** Each one runs in a new shell in your working directory. A timeout or `ctrl+c` stops the command and everything it started.
-- **The model sees what you see.** Every command's exit code and output go back to the model, so it can recover from its own mistakes.
-- **Conversations continue.** The history stays valid even after an interruption, so your next message picks up where you left off.
-
-```ts
-while (true) {
-  const { content, toolCalls } = yield* llm.stream(messages, tools); // then run each bash call
-
-  if (calledTaskComplete)                           return done("task_complete");
-  if (aborted)                                      return done("interrupted");
-  if (!toolCalls.length && nextTurnShouldCallTools) return done("answered", content);
-  if (turn >= maxTurns)                             return done("max_turns");
-
-  nextTurnShouldCallTools = toolCalls.length === 0;
-}
+```bash
+nod upgrade                    # latest release on the remembered channel
+nod upgrade --channel dev      # switch to development builds (prereleases tagged dev-<sha>)
 ```
+
+The interactive shell checks for a new release every 30 minutes, installs it in place, and offers `ctrl+g` to relaunch into it. Set `auto_upgrade: false` or `NOD_AUTO_UPGRADE=0` to turn that off. When nod runs from source, `nod upgrade` tells you to reinstall with `bun install -g github:anturno/nod`.
 
 ## A note on subscriptions
 
@@ -121,7 +123,7 @@ Sign-in uses the OAuth clients of OpenAI's Codex CLI and xAI's Grok CLI against 
 
 ## Contributing
 
-Issues and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, project layout, and how evals work. Please follow the [Code of Conduct](CODE_OF_CONDUCT.md), and report security issues privately as described in [SECURITY.md](SECURITY.md).
+Issues and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, project layout, verification, releases, and how evals work. Please follow the [Code of Conduct](CODE_OF_CONDUCT.md), and report security issues privately as described in [SECURITY.md](SECURITY.md).
 
 ## License
 

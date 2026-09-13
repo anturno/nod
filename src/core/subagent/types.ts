@@ -2,7 +2,7 @@
 
 export type SubagentOptions = { model?: string; effort?: string; instructions?: string };
 export type SubagentOutcome =
-  | { ok: true; result: string; toolCalls: number }
+  | { ok: true; result: string; toolCalls: { name: string; status: string }[] }
   | { ok: false; error_code: string; message?: string };
 
 export type SubagentService = {

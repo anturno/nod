@@ -44,7 +44,7 @@ describe("subagent", () => {
     const subagents: SubagentService = {
       run: async (task, opts) => {
         calls.push(["run", task, opts]);
-        return { ok: true, result: "done", toolCalls: 3 };
+        return { ok: true, result: "done", toolCalls: [{ name: "read_file", status: "success" }] };
       },
       message: async (agent, message, opts) => {
         calls.push(["message", agent, message, opts]);
@@ -53,7 +53,7 @@ describe("subagent", () => {
     };
     expect(await call(input, makeCtx(ws, { subagents }))).toEqual({
       status: "success",
-      output: '{"ok":true,"result":"done","tool_calls":3}',
+      output: '{"ok":true,"result":"done","tool_calls":[{"name":"read_file","status":"success"}]}',
     });
     const msg = decodeOk(decode({ request: { action: "message", agent: "rev", message: "hi", effort: "high" } }));
     expect(await call(msg, makeCtx(ws, { subagents }))).toEqual({

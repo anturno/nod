@@ -16,6 +16,11 @@
     "@types/react": "^19.3.0",
     "typescript": "^7.0.2"
   },
+  "exports": {
+    ".": "./src/cli/main.ts",
+    "./sdk": "./src/sdk/index.ts",
+    "./sdk/xterm": "./src/sdk/xterm.ts"
+  },
   "bin": {
     "nod": "src/cli/main.ts"
   },

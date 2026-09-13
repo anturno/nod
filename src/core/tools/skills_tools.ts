@@ -87,7 +87,15 @@ export function decodeSearch(args: unknown): DecodeResult<SearchInput> {
   return ok({ query: a.query, server: typeof a.server === "string" ? a.server : undefined });
 }
 
-// ponytail: no pagination; every lexical hit fits in one result until skill catalogs get large.
+type McpSearchJson = {
+  tools?: unknown[];
+  total_matches?: number;
+  state?: string;
+  authentication_required?: unknown;
+  context_limit?: unknown;
+};
+
+/** Merges the skill hits and the MCP search into fx's combined shape: skills, mcp_tools, counts, total_matches, state. */
 export async function callSearch(input: SearchInput, ctx: ToolContext): Promise<ToolResult> {
   const hits = ctx.skills?.search(input.query) ?? [];
   const skills = hits.map(({ skill, score }) => ({
@@ -96,29 +104,33 @@ export async function callSearch(input: SearchInput, ctx: ToolContext): Promise<
     description: skill.description,
     score,
   }));
-  let tools: string[] = [];
+  let mcp: McpSearchJson = {};
+  let notice: string | undefined;
+  let mcpError: string | undefined;
   if (ctx.mcp) {
     try {
-      tools = (await ctx.mcp.search(input.query, input.server)).selected;
+      const result = await ctx.mcp.search(input.query, input.server);
+      notice = result.notice;
+      mcp = JSON.parse(result.text) as McpSearchJson;
     } catch (err) {
-      return {
-        status: "failure",
-        output: toolExecutionFailed("capability_search", err instanceof Error ? err.message : String(err)),
-      };
+      mcpError = err instanceof Error ? err.message : String(err);
     }
   }
-  return {
-    status: "success",
-    output: JSON.stringify({
-      skills,
-      count: skills.length,
-      total_matches: skills.length,
-      more_available: false,
-      next_cursor: null,
-      tools,
-      tool_count: tools.length,
-    }),
+  const mcpTools = Array.isArray(mcp.tools) ? mcp.tools : [];
+  const mcpTotal = typeof mcp.total_matches === "number" ? mcp.total_matches : mcpTools.length;
+  const out: Record<string, unknown> = {
+    skills,
+    mcp_tools: mcpTools,
+    counts: { skills: skills.length, mcp_tools: mcpTools.length },
+    total_matches: { skills: skills.length, mcp_tools: mcpTotal },
   };
+  if (skills.length === 0 && mcpTotal === 0 && !mcp.state && !mcp.authentication_required && !mcpError)
+    out.state = "no_match";
+  if (mcp.authentication_required !== undefined) out.authentication_required = mcp.authentication_required;
+  if (mcp.state !== undefined) out.mcp_state = mcp.state;
+  if (mcpError !== undefined) out.mcp_error = mcpError;
+  if (mcp.context_limit !== undefined) out.mcp_context_limit = mcp.context_limit;
+  return { status: "success", output: `${JSON.stringify(out)}${notice ? `\n${notice}` : ""}` };
 }
 
 export const searchLabel = (input: SearchInput): string => `capability_search ${input.query}`;

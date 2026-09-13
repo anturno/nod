@@ -189,8 +189,8 @@ export async function runAsk(argv: string[], global: GlobalArgs, io: Io): Promis
       interactive: args.promptPermissions,
       prompter: args.promptPermissions ? ttyPrompter() : undefined,
       images: prompt.images,
+      extraInstructions: args.system,
     });
-    if (args.system) runtime.loop.state.steering.push(args.system);
     const controller = new AbortController();
     const onSigint = () => controller.abort();
     process.once("SIGINT", onSigint);
@@ -241,6 +241,7 @@ export async function runAsk(argv: string[], global: GlobalArgs, io: Io): Promis
       requestCount: steps,
     };
     if (session) {
+      const wantsTitle = shouldGenerateTitle(session.manifest, { sessionTitles: config.sessionTitles });
       saveTurn(session, outcome.turn as HistoryTurn, usage);
       if (outcome.kind === "paused" || outcome.kind === "failed") {
         writeRecovery(session.dir, {
@@ -273,7 +274,7 @@ export async function runAsk(argv: string[], global: GlobalArgs, io: Io): Promis
             total_cost: 0,
           },
         );
-      if (shouldGenerateTitle(session.manifest, { sessionTitles: config.sessionTitles })) {
+      if (wantsTitle && outcome.kind === "completed") {
         const title = await generateTitle(runtime.llm.llm(runtime.model), prompt.text);
         if (title) updateManifest(session, { title, title_generated: true });
       }

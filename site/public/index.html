@@ -65,7 +65,7 @@
         "isAccessibleForFree": true,
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
         "downloadUrl": "https://github.com/anturno/nod",
-        "installUrl": "https://github.com/anturno/nod#install",
+        "installUrl": "%SITE_URL%/docs/getting-started/installation",
         "publisher": { "@id": "%SITE_URL%/#org" },
         "sameAs": ["https://github.com/anturno/nod"]
       },
@@ -108,7 +108,9 @@
     </a>
     <div class="flex items-center gap-4">
       <nav aria-label="Site" class="-mx-2.5 flex items-center gap-0.5">
-        <a href="https://github.com/anturno/nod#readme" class="rounded-full px-2.5 py-1 text-fg-muted transition-colors hover:bg-bg-subtle hover:text-fg">Docs</a>
+        <a href="%SITE_URL%/docs" class="rounded-full px-2.5 py-1 text-fg-muted transition-colors hover:bg-bg-subtle hover:text-fg">Docs</a>
+        <a href="%SITE_URL%/docs/using-nod/cli" class="rounded-full px-2.5 py-1 text-fg-muted transition-colors hover:bg-bg-subtle hover:text-fg">CLI</a>
+        <a href="%SITE_URL%/docs/lib" class="rounded-full px-2.5 py-1 text-fg-muted transition-colors hover:bg-bg-subtle hover:text-fg">SDK</a>
         <a href="https://github.com/anturno/nod" class="rounded-full px-2.5 py-1 text-fg-muted transition-colors hover:bg-bg-subtle hover:text-fg">GitHub</a>
       </nav>
       <button id="theme" type="button" aria-label="Switch theme" class="-m-1.5 cursor-pointer rounded-md p-1.5 text-fg-muted transition-colors hover:text-fg">
@@ -130,25 +132,31 @@
       <div class="mt-8">
         <div class="flex items-center gap-3 rounded-lg border border-border bg-bg-subtle py-1.5 pr-1.5 pl-4 font-mono text-sm">
           <span class="select-none text-fg-faint">$</span>
-          <code data-cmd-text class="min-w-0 flex-1 overflow-x-auto whitespace-nowrap text-fg">bun install -g github:anturno/nod</code>
+          <code data-cmd-text class="min-w-0 flex-1 overflow-x-auto whitespace-nowrap text-fg">curl -fsSL https://nod.anturno.cloud/setup.sh | bash</code>
           <button data-copy type="button" class="cursor-pointer rounded-md px-2.5 py-1 font-sans text-fg-muted transition-colors hover:bg-bg hover:text-fg">Copy</button>
         </div>
-        <p class="mt-2 text-fg-faint">Requires Bun 1.4+. Then <code class="code">nod login codex</code> or <code class="code">nod login grok</code>.</p>
+        <p class="mt-2 text-fg-faint">macOS and Linux. Then <code class="code">nod login codex</code> or <code class="code">nod login grok</code>. Prefer Bun? <code class="code">bun install -g github:anturno/nod</code>. <a href="%SITE_URL%/docs/getting-started/installation" class="link">Read the installer first</a>.</p>
       </div>
     </section>
 
     <figure class="animate-rise mt-12" style="--delay: 60ms">
       <figcaption class="sr-only">Example of nod fixing a bug and running the tests</figcaption>
-      <pre class="term"><span class="text-fg-faint">$</span> <span class="text-fg">nod "add() in src/math.ts returns the wrong result. Fix it and run the tests."</span>
-<span class="text-fg">⏺</span> bash<span class="text-fg-faint">(cat src/math.ts)</span>
-<span class="text-fg-faint">  ⎿ export function add(a: number, b: number) { (+3 lines)</span>
-<span class="text-fg">⏺</span> bash<span class="text-fg-faint">(bun test test/math.test.ts)</span>
-<span class="text-fg-faint">  ⎿ exit code 1 (+12 lines)</span>
-<span class="text-fg">⏺</span> bash<span class="text-fg-faint">(sed -i 's/return a - b/return a + b/' src/math.ts)</span>
-<span class="text-fg-faint">  ⎿ (no output)</span>
-<span class="text-fg">⏺</span> bash<span class="text-fg-faint">(bun test)</span>
-<span class="text-fg-faint">  ⎿ bun test v1.4.2 (+8 lines)</span>
-<span class="text-fg">add() subtracted instead of adding. Fixed in src/math.ts; all 14 tests pass.</span></pre>
+      <pre class="term"><span class="text-fg-faint">$</span> <span class="text-fg">nod</span>
+<span class="text-fg-faint">&gt;</span> <span class="text-fg">add() in src/math.ts returns the wrong result. Fix it and run the tests.</span>
+
+<span class="text-accent">●</span> <span class="text-fg">Read src/math.ts</span>
+<span class="text-fg-faint">│</span> export function add(a: number, b: number) {
+<span class="text-fg-faint">│</span>   return a - b;
+<span class="text-accent">●</span> <span class="text-fg">Ran bun test test/math.test.ts</span>
+<span class="text-fg-faint">│</span> 1 fail, 13 pass <span class="text-fg-faint">(+12 lines)</span>
+<span class="text-accent">●</span> <span class="text-fg">Edited src/math.ts</span>
+<span class="text-fg-faint">│</span> -  return a - b;
+<span class="text-fg-faint">│</span> +  return a + b;
+<span class="text-accent">●</span> <span class="text-fg">Ran bun test</span>
+<span class="text-fg-faint">│</span> 14 pass, 0 fail <span class="text-fg-faint">(+8 lines)</span>
+
+<span class="text-fg">add() subtracted instead of adding. Fixed in src/math.ts; all 14 tests pass.</span>
+<span class="text-fg-faint">● 4 tool calls · 1 read · 1 edit · 2 commands</span></pre>
     </figure>
 
     <!-- Rail sections: label in the left gutter, content beside it. -->
@@ -157,76 +165,57 @@
       <ol role="list" class="space-y-4">
         <li>
           <p class="text-fg">Uses your subscription</p>
-          <p class="mt-0.5 text-pretty text-fg-muted">Sign in with ChatGPT (Plus, Pro, Business, Enterprise or Edu) or Grok (SuperGrok or X Premium) and start working.</p>
+          <p class="mt-0.5 text-pretty text-fg-muted">Sign in with ChatGPT (Plus, Pro, Business, Enterprise or Edu) or Grok (SuperGrok or X Premium) and start working. Tokens stay in <code class="code">~/.nod</code> on your machine.</p>
         </li>
         <li>
-          <p class="text-fg">You approve every command</p>
-          <p class="mt-0.5 text-pretty text-fg-muted">Each command is shown with a risk level before it runs. Approve it once, allow commands for the session, or deny it.</p>
+          <p class="text-fg">Approves before acting</p>
+          <p class="mt-0.5 text-pretty text-fg-muted">Reads are free; edits, commands and external paths go through your rules. In <code class="code">auto</code> mode a reviewer model settles the rest, in <code class="code">ask</code> mode you do. Say yes once, or for the whole session.</p>
         </li>
         <li>
-          <p class="text-fg">Small enough to trust</p>
-          <p class="mt-0.5 text-pretty text-fg-muted">nod acts only through bash, the same commands you would type. No agent framework, no model SDK, and the whole codebase fits in an afternoon's reading.</p>
+          <p class="text-fg">Shell-like UI</p>
+          <p class="mt-0.5 text-pretty text-fg-muted">A streaming transcript with each tool call folded to one line. Type <code class="code">/</code> for commands, <code class="code">@</code> for files, <code class="code">$</code> for skills, ctrl+o for the full output. Sessions save, resume and recover.</p>
         </li>
         <li>
-          <p class="text-fg">Switch models mid-conversation</p>
-          <p class="mt-0.5 text-pretty text-fg-muted">Move between ChatGPT and Grok models with <code class="code">/model</code> without losing context.</p>
+          <p class="text-fg">Context efficient</p>
+          <p class="mt-0.5 text-pretty text-fg-muted">Large tool results stay out of the window behind a handle the model can read on demand. <code class="code">AGENTS.md</code>, skills and MCP schemas load bounded and only when they apply; long sessions compact themselves.</p>
         </li>
         <li>
-          <p class="text-fg">Measured, not guessed</p>
-          <p class="mt-0.5 text-pretty text-fg-muted">An eval suite of real tasks tracks how often the agent succeeds, how many steps it takes, and how much context it uses.</p>
+          <p class="text-fg">Embeddable</p>
+          <p class="mt-0.5 text-pretty text-fg-muted">The same runtime is a library: <code class="code">createAgent()</code> for a headless agent with your own tools, <code class="code">createTerminal()</code> for the whole shell inside your app. In-process TypeScript on Bun, no addon.</p>
+        </li>
+        <li>
+          <p class="text-fg">Editor-ready via ACP</p>
+          <p class="mt-0.5 text-pretty text-fg-muted"><code class="code">nod acp</code> speaks the Agent Client Protocol over stdio, so any editor that supports ACP can drive nod with the same sessions, permissions and MCP servers.</p>
         </li>
       </ol>
     </section>
 
     <section class="animate-rise mt-14 sm:grid sm:grid-cols-[var(--spacing-gutter)_minmax(0,1fr)]" style="--delay: 160ms">
-      <h2 class="mb-2 font-normal text-fg-faint sm:mb-0">Approval</h2>
-      <div>
-        <p class="text-pretty text-fg-muted">Nothing runs until you say so, and each command shows its risk level first.</p>
-        <pre class="term mt-4"><span class="text-fg">Approval required</span>  <span class="text-accent">[LOW RISK]</span>
-
-bash  <span class="text-fg">bun test</span>
-
-<span class="text-fg">[y] once</span>  <span class="text-fg">[a] session</span>  <span class="text-fg">[n] deny</span></pre>
-      </div>
+      <h2 class="mb-2 font-normal text-fg-faint sm:mb-0 sm:pt-1.5">Shortcuts</h2>
+      <ul role="list">
+        <li class="py-2 sm:flex sm:items-baseline sm:justify-between sm:gap-4 sm:py-1.5"><code class="code shrink-0">enter</code><span class="block text-fg-faint sm:text-right">Send, or steer the active turn with a follow-up</span></li>
+        <li class="py-2 sm:flex sm:items-baseline sm:justify-between sm:gap-4 sm:py-1.5"><code class="code shrink-0">shift+enter</code><span class="block text-fg-faint sm:text-right">Insert a newline (alt+enter or \ then enter also work)</span></li>
+        <li class="py-2 sm:flex sm:items-baseline sm:justify-between sm:gap-4 sm:py-1.5"><code class="code shrink-0">esc</code><span class="block text-fg-faint sm:text-right">Interrupt the current turn</span></li>
+        <li class="py-2 sm:flex sm:items-baseline sm:justify-between sm:gap-4 sm:py-1.5"><code class="code shrink-0">ctrl+c</code><span class="block text-fg-faint sm:text-right">Clear the draft; with an empty draft, cancel; twice, quit</span></li>
+        <li class="py-2 sm:flex sm:items-baseline sm:justify-between sm:gap-4 sm:py-1.5"><code class="code shrink-0">ctrl+o</code><span class="block text-fg-faint sm:text-right">Review and full transcript, then left or right</span></li>
+        <li class="py-2 sm:flex sm:items-baseline sm:justify-between sm:gap-4 sm:py-1.5"><code class="code shrink-0">up / down</code><span class="block text-fg-faint sm:text-right">Prompt history at the edge of the draft</span></li>
+        <li class="py-2 sm:flex sm:items-baseline sm:justify-between sm:gap-4 sm:py-1.5"><code class="code shrink-0">/ @ $</code><span class="block text-fg-faint sm:text-right">Commands, files, skills</span></li>
+      </ul>
     </section>
 
     <section class="animate-rise mt-14 sm:grid sm:grid-cols-[var(--spacing-gutter)_minmax(0,1fr)]" style="--delay: 200ms">
-      <h2 class="mb-2 font-normal text-fg-faint sm:mb-0 sm:pt-1.5">Shell</h2>
+      <h2 class="mb-2 font-normal text-fg-faint sm:mb-0 sm:pt-1.5">CLI</h2>
       <ul role="list">
-        <li class="py-2 sm:flex sm:items-baseline sm:justify-between sm:gap-4 sm:py-1.5"><code class="code shrink-0">/model</code><span class="block text-fg-faint sm:text-right">Switch model, keep the conversation</span></li>
-        <li class="py-2 sm:flex sm:items-baseline sm:justify-between sm:gap-4 sm:py-1.5"><code class="code shrink-0">/clear</code><span class="block text-fg-faint sm:text-right">Start a fresh conversation</span></li>
-        <li class="py-2 sm:flex sm:items-baseline sm:justify-between sm:gap-4 sm:py-1.5"><code class="code shrink-0">/verbose</code><span class="block text-fg-faint sm:text-right">Expand command output and reasoning</span></li>
-        <li class="py-2 sm:flex sm:items-baseline sm:justify-between sm:gap-4 sm:py-1.5"><code class="code shrink-0">esc</code><span class="block text-fg-faint sm:text-right">Interrupt the agent</span></li>
-        <li class="py-2 sm:flex sm:items-baseline sm:justify-between sm:gap-4 sm:py-1.5"><code class="code shrink-0">/exit</code><span class="block text-fg-faint sm:text-right">Quit</span></li>
+        <li class="py-2 sm:flex sm:items-baseline sm:justify-between sm:gap-4 sm:py-1.5"><code class="code shrink-0">nod</code><span class="block text-fg-faint sm:text-right">Open the interactive shell</span></li>
+        <li class="py-2 sm:flex sm:items-baseline sm:justify-between sm:gap-4 sm:py-1.5"><code class="code shrink-0">nod ask "&lt;task&gt;"</code><span class="block text-fg-faint sm:text-right">One request and exit; <code class="code">--json</code> for scripts and CI</span></li>
+        <li class="py-2 sm:flex sm:items-baseline sm:justify-between sm:gap-4 sm:py-1.5"><code class="code shrink-0">nod -r</code><span class="block text-fg-faint sm:text-right">Pick a saved session to resume</span></li>
+        <li class="py-2 sm:flex sm:items-baseline sm:justify-between sm:gap-4 sm:py-1.5"><code class="code shrink-0">nod login</code><span class="block text-fg-faint sm:text-right">Sign in with codex or grok</span></li>
+        <li class="py-2 sm:flex sm:items-baseline sm:justify-between sm:gap-4 sm:py-1.5"><code class="code shrink-0">nod acp</code><span class="block text-fg-faint sm:text-right">ACP server for your editor</span></li>
+        <li class="py-2 sm:flex sm:items-baseline sm:justify-between sm:gap-4 sm:py-1.5"><a href="%SITE_URL%/docs/using-nod/cli" class="link shrink-0">All commands</a><span class="block text-fg-faint sm:text-right">Sessions, MCP, permissions, workspaces, upgrade</span></li>
       </ul>
     </section>
 
     <section class="animate-rise mt-14 sm:grid sm:grid-cols-[var(--spacing-gutter)_minmax(0,1fr)]" style="--delay: 240ms">
-      <h2 class="mb-2 font-normal text-fg-faint sm:mb-0">How it works</h2>
-      <div>
-        <p class="text-pretty text-fg-muted">A loop around a model with two tools: <code class="code">bash</code> to act and <code class="code">task_complete</code> to finish. Every command starts in a fresh shell, and its exit code and output go back to the model so it can recover from its own mistakes.</p>
-        <pre class="term mt-4"><span class="text-fg">while</span> (true) {
-  const { content, toolCalls } = yield* llm.stream(messages, tools);
-
-  if (calledTaskComplete)  return done(<span class="text-fg">"task_complete"</span>);
-  if (aborted)             return done(<span class="text-fg">"interrupted"</span>);
-  if (turn >= maxTurns)    return done(<span class="text-fg">"max_turns"</span>);
-}</pre>
-      </div>
-    </section>
-
-    <section class="animate-rise mt-14 sm:grid sm:grid-cols-[var(--spacing-gutter)_minmax(0,1fr)]" style="--delay: 280ms">
-      <h2 class="mb-2 font-normal text-fg-faint sm:mb-0 sm:pt-1.5">CLI</h2>
-      <ul role="list">
-        <li class="py-2 sm:flex sm:items-baseline sm:justify-between sm:gap-4 sm:py-1.5"><code class="code shrink-0">nod</code><span class="block text-fg-faint sm:text-right">Open the interactive shell</span></li>
-        <li class="py-2 sm:flex sm:items-baseline sm:justify-between sm:gap-4 sm:py-1.5"><code class="code shrink-0">nod "&lt;task&gt;"</code><span class="block text-fg-faint sm:text-right">Run one task and exit, for scripts and CI</span></li>
-        <li class="py-2 sm:flex sm:items-baseline sm:justify-between sm:gap-4 sm:py-1.5"><code class="code shrink-0">nod login</code><span class="block text-fg-faint sm:text-right">Sign in with codex or grok</span></li>
-        <li class="py-2 sm:flex sm:items-baseline sm:justify-between sm:gap-4 sm:py-1.5"><code class="code shrink-0">nod models</code><span class="block text-fg-faint sm:text-right">Models your plan can use</span></li>
-        <li class="py-2 sm:flex sm:items-baseline sm:justify-between sm:gap-4 sm:py-1.5"><code class="code shrink-0">--yes</code><span class="block text-fg-faint sm:text-right">Run commands without asking</span></li>
-      </ul>
-    </section>
-
-    <section class="animate-rise mt-14 sm:grid sm:grid-cols-[var(--spacing-gutter)_minmax(0,1fr)]" style="--delay: 320ms">
       <h2 class="mb-2 font-normal text-fg-faint sm:mb-0">Subscriptions</h2>
       <p class="text-pretty text-fg-muted">Sign-in uses the OAuth clients of OpenAI's Codex CLI and xAI's Grok CLI against their subscription backends. These aren't public APIs and can change without notice. Tokens stay in <code class="code">~/.nod</code> on your machine. You're responsible for following each provider's terms.</p>
     </section>
@@ -234,9 +223,9 @@ bash  <span class="text-fg">bun test</span>
 
   <footer class="mx-auto max-w-page px-6 pt-24 pb-20">
     <div class="flex flex-wrap gap-x-4 gap-y-1 text-fg-faint">
-      <a href="https://github.com/anturno/nod" class="transition-colors hover:text-fg">GitHub</a>
-      <a href="https://github.com/anturno/nod#contributing" class="transition-colors hover:text-fg">Contribute</a>
-      <a href="https://github.com/anturno/nod#evals" class="transition-colors hover:text-fg">Evals</a>
+      <a href="https://github.com/anturno/nod/blob/main/CHANGELOG.md" class="transition-colors hover:text-fg">changelog</a>
+      <a href="https://github.com/anturno/nod" class="transition-colors hover:text-fg">source</a>
+      <a href="%SITE_URL%/docs" class="transition-colors hover:text-fg">docs</a>
     </div>
     <p class="mt-8 text-fg-faint">MIT License · <a href="https://github.com/anturno" class="transition-colors hover:text-fg">Anturno</a></p>
   </footer>

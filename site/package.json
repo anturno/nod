@@ -9,6 +9,7 @@
   },
   "devDependencies": {
     "@tailwindcss/cli": "^4.3.3",
+    "marked": "^18.0.13",
     "serve": "^14.2.6",
     "tailwindcss": "^4.3.3"
   }

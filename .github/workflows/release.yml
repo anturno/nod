@@ -1,0 +1,74 @@
+name: Release
+
+# `v*` tags publish a stable release; `dev-*` tags publish a prerelease on the dev channel.
+on:
+  push:
+    tags: ["v*", "dev-*"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build ${{ matrix.platform }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { platform: macos-aarch64, target: bun-darwin-arm64, os: macos-latest, smoke: true }
+          - { platform: macos-x86_64, target: bun-darwin-x64, os: macos-latest, smoke: true }
+          - { platform: linux-x86_64, target: bun-linux-x64, os: ubuntu-latest, smoke: true }
+          - { platform: linux-aarch64, target: bun-linux-arm64, os: ubuntu-latest, smoke: false }
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - name: Build
+        run: >
+          bun build --compile --target=${{ matrix.target }}
+          --define 'process.env.NOD_BUILD_TAG="${{ github.ref_name }}"'
+          src/cli/main.ts --outfile nod
+      - name: Smoke test
+        if: matrix.smoke
+        run: ./nod --version
+      - name: Package
+        run: |
+          tar -czf nod-${{ matrix.platform }}.tar.gz nod
+          shasum -a 256 nod-${{ matrix.platform }}.tar.gz > nod-${{ matrix.platform }}.tar.gz.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nod-${{ matrix.platform }}
+          path: |
+            nod-${{ matrix.platform }}.tar.gz
+            nod-${{ matrix.platform }}.tar.gz.sha256
+
+  publish:
+    name: Publish ${{ github.ref_name }}
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Create the release if missing, then upload the archives
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="${{ github.ref_name }}"
+          if ! gh release view "$tag" >/dev/null 2>&1; then
+            if [[ "$tag" == dev-* ]]; then
+              gh release create "$tag" --prerelease --title "$tag" --notes "Development build $tag"
+            else
+              gh release create "$tag" --title "$tag" --generate-notes
+            fi
+          fi
+          gh release upload "$tag" dist/* --clobber

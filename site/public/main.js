@@ -7,7 +7,7 @@ document.getElementById("theme").addEventListener("click", () => {
 });
 
 const cmd = document.querySelector("[data-cmd-text]");
-document.querySelector("[data-copy]").addEventListener("click", async (e) => {
+document.querySelector("[data-copy]")?.addEventListener("click", async (e) => {
   const btn = e.currentTarget;
   try {
     await navigator.clipboard.writeText(cmd.textContent);
@@ -22,6 +22,7 @@ document.querySelector("[data-copy]").addEventListener("click", async (e) => {
 fetch("https://raw.githubusercontent.com/anturno/nod/main/package.json")
   .then((r) => (r.ok ? r.json() : null))
   .then((pkg) => {
-    if (pkg?.version) document.getElementById("version").textContent = `v${pkg.version}`;
+    const el = document.getElementById("version");
+    if (pkg?.version && el) el.textContent = `v${pkg.version}`;
   })
   .catch(() => {});
