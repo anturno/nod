@@ -1,0 +1,59 @@
+{
+  "name": "@anturno/nod",
+  "version": "0.0.1",
+  "author": "Anturno (https://github.com/anturno)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/anturno/nod.git"
+  },
+  "homepage": "https://nod.anturno.cloud",
+  "bugs": {
+    "url": "https://github.com/anturno/nod/issues"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.13",
+    "@types/bun": "^1.4.2",
+    "@types/react": "^19.3.0",
+    "typescript": "^7.0.2"
+  },
+  "exports": {
+    ".": "./src/cli/main.ts",
+    "./sdk": "./src/sdk/index.ts",
+    "./sdk/xterm": "./src/sdk/xterm.ts"
+  },
+  "bin": {
+    "nod": "src/cli/main.ts"
+  },
+  "description": "A minimal coding agent built from scratch. Runs on your ChatGPT or Grok subscription.",
+  "engines": {
+    "bun": ">=1.4"
+  },
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "keywords": [
+    "coding-agent",
+    "chatgpt",
+    "codex",
+    "grok",
+    "cli"
+  ],
+  "license": "Apache-2.0",
+  "packageManager": "bun@1.4.2",
+  "scripts": {
+    "dev": "bun run src/cli/main.ts",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "eval": "bun run evals/run.ts",
+    "check": "biome check .",
+    "fix": "biome check --write ."
+  },
+  "type": "module",
+  "dependencies": {
+    "ink": "^7.1.1",
+    "react": "^19.3.0"
+  }
+}

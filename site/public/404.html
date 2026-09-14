@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Page not found · nod</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="%SITE_URL%/favicon.svg" type="image/svg+xml">
+  <script>
+    try {
+      const t = localStorage.getItem("theme");
+      if (t === "dark" || (!t && matchMedia("(prefers-color-scheme: dark)").matches)) {
+        document.documentElement.classList.add("dark");
+      }
+    } catch {}
+  </script>
+  <link rel="stylesheet" href="%SITE_URL%/styles.css">
+</head>
+<body class="min-h-dvh">
+  <main class="mx-auto max-w-page px-6 pt-12 sm:pt-20">
+    <a href="%SITE_URL%/" class="font-medium text-fg transition-opacity hover:opacity-60">nod</a>
+    <h1 class="mt-14 text-fg">Page not found</h1>
+    <p class="mt-2 text-fg-muted">This page doesn't exist. <a href="%SITE_URL%/" class="link">Go to the home page</a>.</p>
+  </main>
+</body>
+</html>

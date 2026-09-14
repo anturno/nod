@@ -1,0 +1,16 @@
+{
+  "name": "nod-site",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "bun build.ts",
+    "dev": "bun build.ts --watch",
+    "og": "bun og/render.ts"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.3.3",
+    "marked": "^18.0.13",
+    "serve": "^14.2.6",
+    "tailwindcss": "^4.3.3"
+  }
+}

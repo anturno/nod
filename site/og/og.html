@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Newsreader:opsz,wght@6..72,400&display=block" rel="stylesheet">
+  <!-- Copy mirrors the hero in public/index.html; colours are the .dark tokens in src/styles.css. -->
+  <style>
+    * { margin: 0; box-sizing: border-box; }
+    html, body { width: 1200px; height: 630px; overflow: hidden; }
+    body {
+      background: oklch(21.9% 0.002 68); color: oklch(92.3% 0.009 85);
+      font-family: Inter, system-ui, sans-serif;
+      padding: 96px;
+      display: flex; flex-direction: column; justify-content: center; gap: 56px;
+    }
+    h1 {
+      font-family: Newsreader, Georgia, serif; font-weight: 400;
+      font-size: 88px; line-height: 1.05; letter-spacing: -0.015em;
+    }
+    .cmd {
+      display: inline-flex; gap: 18px; align-self: flex-start;
+      font: 26px ui-monospace, "SF Mono", Menlo, monospace;
+      background: oklch(25.6% 0.004 85); border: 1px solid oklch(34.6% 0.006 78); border-radius: 14px; padding: 18px 28px;
+    }
+    .cmd span { color: oklch(72.4% 0.012 77); }
+  </style>
+</head>
+<body>
+  <h1>A coding agent that feels like a shell.</h1>
+  <div class="cmd"><span>$</span>curl -fsSL https://nod.anturno.cloud/setup.sh | bash</div>
+</body>
+</html>

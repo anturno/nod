@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>nod · A coding agent on your ChatGPT or Grok subscription</title>
+  <meta name="description" content="Open source coding agent for your terminal. Runs on the ChatGPT or Grok subscription you already pay for, asks before every command, and fits in an afternoon's reading.">
+  <link rel="canonical" href="%SITE_URL%/">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta name="author" content="Anturno">
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1b1a19">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="nod">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:url" content="%SITE_URL%/">
+  <meta property="og:title" content="nod · A coding agent on the subscription you already pay for">
+  <meta property="og:description" content="Describe a task. nod reads your code, runs your tests and edits the files, on your ChatGPT or Grok plan. No API key, nothing billed per token.">
+  <meta property="og:image" content="%SITE_URL%/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="nod: a coding agent on the subscription you already pay for">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="nod · A coding agent on the subscription you already pay for">
+  <meta name="twitter:description" content="Describe a task. nod reads your code, runs your tests and edits the files, on your ChatGPT or Grok plan. No API key, nothing billed per token.">
+  <meta name="twitter:image" content="%SITE_URL%/og.png">
+  <meta name="twitter:image:alt" content="nod: a coding agent on the subscription you already pay for">
+
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="sitemap" type="application/xml" href="sitemap.xml">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "%SITE_URL%/#website",
+        "url": "%SITE_URL%/",
+        "name": "nod",
+        "inLanguage": "en",
+        "publisher": { "@id": "%SITE_URL%/#org" }
+      },
+      {
+        "@type": "Organization",
+        "@id": "%SITE_URL%/#org",
+        "name": "Anturno",
+        "url": "https://github.com/anturno",
+        "sameAs": ["https://github.com/anturno"]
+      },
+      {
+        "@type": "SoftwareApplication",
+        "@id": "%SITE_URL%/#app",
+        "name": "nod",
+        "url": "%SITE_URL%/",
+        "description": "Open source coding agent for your terminal that runs on your ChatGPT or Grok subscription.",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "macOS, Linux",
+        "softwareRequirements": "Bun 1.4+",
+        "image": "%SITE_URL%/og.png",
+        "license": "https://www.apache.org/licenses/LICENSE-2.0",
+        "isAccessibleForFree": true,
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "downloadUrl": "https://github.com/anturno/nod",
+        "installUrl": "%SITE_URL%/docs/getting-started/installation",
+        "publisher": { "@id": "%SITE_URL%/#org" },
+        "sameAs": ["https://github.com/anturno/nod"]
+      },
+      {
+        "@type": "SoftwareSourceCode",
+        "name": "nod",
+        "codeRepository": "https://github.com/anturno/nod",
+        "programmingLanguage": "TypeScript",
+        "runtimePlatform": ["Bun"],
+        "license": "https://www.apache.org/licenses/LICENSE-2.0",
+        "targetProduct": { "@id": "%SITE_URL%/#app" }
+      }
+    ]
+  }
+  </script>
+  <!-- Resolve the theme before first paint so dark mode never flashes white. -->
+  <script>
+    try {
+      const t = localStorage.getItem("theme");
+      if (t === "dark" || (!t && matchMedia("(prefers-color-scheme: dark)").matches)) {
+        document.documentElement.classList.add("dark");
+      }
+    } catch {}
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Fonts load without blocking first paint; the system stack shows until they arrive. -->
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Newsreader:opsz,wght@6..72,400&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Newsreader:opsz,wght@6..72,400&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Newsreader:opsz,wght@6..72,400&display=swap"></noscript>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="min-h-dvh">
+  <a href="#main" class="sr-only rounded-md bg-bg px-3 py-2 text-fg focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50">Skip to content</a>
+
+  <header class="mx-auto flex max-w-page items-center justify-between gap-6 px-6 pt-12 sm:pt-20">
+    <a href="./" class="flex items-baseline gap-2 font-medium text-fg transition-opacity hover:opacity-60">
+      nod
+      <span id="version" class="font-normal tabular-nums text-fg-faint">v0.0.1</span>
+    </a>
+    <div class="flex items-center gap-4">
+      <nav aria-label="Site" class="-mx-2.5 flex items-center gap-0.5">
+        <a href="%SITE_URL%/docs" class="rounded-full px-2.5 py-1 text-fg-muted transition-colors hover:bg-bg-subtle hover:text-fg">Docs</a>
+        <a href="https://github.com/anturno/nod" class="rounded-full px-2.5 py-1 text-fg-muted transition-colors hover:bg-bg-subtle hover:text-fg">GitHub</a>
+      </nav>
+      <button id="theme" type="button" aria-label="Switch theme" class="-m-1.5 cursor-pointer rounded-md p-1.5 text-fg-muted transition-colors hover:text-fg">
+        <svg class="dark:hidden" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+        <svg class="hidden dark:block" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main id="main" class="mx-auto max-w-page px-6 pt-16 sm:pt-24">
+    <section class="animate-rise">
+      <h1 class="font-serif text-[2.25rem] leading-[1.1] tracking-[-0.015em] text-balance text-fg sm:text-[2.875rem]">
+        A coding agent that feels like a shell.
+      </h1>
+      <p class="mt-5 max-w-[30rem] text-pretty text-fg-muted">
+        Describe the task. nod reads your code, edits the files and runs the tests, and checks before anything risky. Open source.
+      </p>
+    </section>
+
+    <section class="animate-rise mt-9" style="--delay: 60ms">
+      <div class="flex items-center gap-3 rounded-lg border border-border bg-bg-subtle py-1.5 pr-1.5 pl-4 font-mono text-sm">
+        <span class="select-none text-fg-faint">$</span>
+        <code data-cmd-text class="min-w-0 flex-1 overflow-x-auto whitespace-nowrap text-fg [scrollbar-width:none]">curl -fsSL https://nod.anturno.cloud/setup.sh | bash</code>
+        <button data-copy type="button" class="cursor-pointer rounded-md px-2.5 py-1 font-sans text-fg-muted transition-colors hover:bg-bg hover:text-fg">Copy</button>
+      </div>
+      <p class="mt-2.5 text-fg-faint">macOS and Linux. Then <code class="code">nod login codex</code> or <code class="code">nod login grok</code>. <a href="%SITE_URL%/docs" class="link">Read the docs</a></p>
+    </section>
+
+    <figure class="animate-rise mt-14" style="--delay: 120ms">
+      <figcaption class="sr-only">nod fixing a bug and running the tests</figcaption>
+      <div class="overflow-hidden rounded-lg border border-border bg-bg-subtle">
+        <div class="flex items-center gap-1.5 border-b border-border px-3.5 py-2.5" aria-hidden="true">
+          <span class="size-2 rounded-full bg-border"></span><span class="size-2 rounded-full bg-border"></span><span class="size-2 rounded-full bg-border"></span>
+          <span class="ml-2 font-mono text-xs text-fg-faint">~/app</span>
+        </div>
+        <pre data-demo class="term rounded-none border-0"><span class="text-fg-faint">$</span> <span class="text-fg">nod</span>
+<span class="text-fg-faint">&gt;</span> <span class="text-fg">add() returns the wrong result. Fix it and run the tests.</span>
+
+<span class="text-accent">●</span> <span class="text-fg">Read src/math.ts</span>
+<span class="text-fg-faint">│</span>   return a - b;
+<span class="text-accent">●</span> <span class="text-fg">Ran bun test</span>
+<span class="text-fg-faint">│</span> 1 fail, 13 pass
+<span class="text-accent">●</span> <span class="text-fg">Edited src/math.ts</span>
+<span class="text-fg-faint">│</span> -  return a - b;
+<span class="text-fg-faint">│</span> +  return a + b;
+<span class="text-accent">●</span> <span class="text-fg">Ran bun test</span>
+<span class="text-fg-faint">│</span> 14 pass, 0 fail
+
+<span class="text-fg">add() subtracted instead of adding. Fixed; all 14 tests pass.</span></pre>
+      </div>
+    </figure>
+  </main>
+
+  <footer class="mx-auto max-w-page px-6 pt-20 pb-16 text-fg-faint">
+    <p class="flex flex-wrap gap-x-4 gap-y-1">
+      <a href="%SITE_URL%/docs" class="transition-colors hover:text-fg">docs</a>
+      <a href="https://github.com/anturno/nod/blob/main/CHANGELOG.md" class="transition-colors hover:text-fg">changelog</a>
+      <a href="https://github.com/anturno/nod" class="transition-colors hover:text-fg">source</a>
+      <span>Apache-2.0 · <a href="https://github.com/anturno" class="transition-colors hover:text-fg">Anturno</a></span>
+    </p>
+  </footer>
+
+  <script src="main.js" defer></script>
+</body>
+</html>
