@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format is based on 
 
 ## [Unreleased]
 
+### Changed
+
+- Relicensed from MIT to Apache-2.0 to match [vercel-labs/fx](https://github.com/vercel-labs/fx), which nod is ported from; added a `NOTICE` file, which ships in the npm package and release archives.
+
 ## [0.1.0] - Unreleased
 
 nod is rebuilt on the architecture of [vercel-labs/fx](https://github.com/vercel-labs/fx), ported to TypeScript on Bun. Only the ChatGPT (Codex) and Grok subscription backends are kept; the Vercel AI Gateway, `setup`, `teams`, and `credits` are not part of nod.

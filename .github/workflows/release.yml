@@ -40,7 +40,7 @@ jobs:
         run: ./nod --version
       - name: Package
         run: |
-          tar -czf nod-${{ matrix.platform }}.tar.gz nod
+          tar -czf nod-${{ matrix.platform }}.tar.gz nod LICENSE NOTICE
           shasum -a 256 nod-${{ matrix.platform }}.tar.gz > nod-${{ matrix.platform }}.tar.gz.sha256
       - uses: actions/upload-artifact@v4
         with:

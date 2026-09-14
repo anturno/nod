@@ -1,6 +1,6 @@
 # nod
 
-[![CI](https://github.com/anturno/nod/actions/workflows/ci.yml/badge.svg)](https://github.com/anturno/nod/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![CI](https://github.com/anturno/nod/actions/workflows/ci.yml/badge.svg)](https://github.com/anturno/nod/actions/workflows/ci.yml) [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
 **A coding agent for your terminal that runs on the ChatGPT or Grok subscription you already pay for.**
 
@@ -127,4 +127,4 @@ Issues and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for
 
 ## License
 
-[MIT](LICENSE)
+[Apache-2.0](LICENSE). nod is derived from [vercel-labs/fx](https://github.com/vercel-labs/fx) (Apache-2.0, © Vercel, Inc.); see [NOTICE](NOTICE).

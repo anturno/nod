@@ -97,4 +97,4 @@ Binaries are built by `.github/workflows/release.yml` with `bun build --compile`
 - Add an entry under `Unreleased` in [CHANGELOG.md](CHANGELOG.md) for user-facing changes.
 - CI must pass.
 
-By contributing, you agree that your contributions are licensed under the [MIT License](LICENSE) and that you follow the [Code of Conduct](CODE_OF_CONDUCT.md).
+By contributing, you agree that your contributions are licensed under the [Apache License 2.0](LICENSE) and that you follow the [Code of Conduct](CODE_OF_CONDUCT.md).

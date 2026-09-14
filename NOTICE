@@ -1,0 +1,11 @@
+nod
+Copyright 2026 Anturno
+
+This product is a TypeScript port of fx (https://github.com/vercel-labs/fx),
+Copyright 2025 Vercel, Inc., licensed under the Apache License, Version 2.0.
+
+nod reimplements fx's architecture on Bun and reuses fx's tool names and
+schemas, prompts, and user-visible strings (with "fx" renamed to "nod").
+Changes from fx: rewritten in TypeScript, only the ChatGPT (Codex) and Grok
+subscription backends are kept, and the Vercel AI Gateway, `setup`, `teams`,
+and `credits` features are removed.
