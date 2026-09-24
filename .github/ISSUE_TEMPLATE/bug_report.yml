@@ -1,0 +1,42 @@
+name: Bug report
+description: Something in nod does not work as expected
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you ran, what you expected, and what happened instead. Remove tokens and anything private from pasted output.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. nod login codex
+        2. nod "..."
+    validations:
+      required: true
+  - type: dropdown
+    id: provider
+    attributes:
+      label: Provider
+      options: [ChatGPT (codex), Grok]
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: Model
+      placeholder: gpt-5.6-luna
+  - type: input
+    id: version
+    attributes:
+      label: nod commit
+      description: Output of `git rev-parse --short HEAD` in your nod checkout, or the install date
+  - type: input
+    id: env
+    attributes:
+      label: OS, terminal, and Bun version
+      placeholder: macOS 15, Ghostty, Bun 1.4.2

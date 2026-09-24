@@ -1,0 +1,233 @@
+@import "tailwindcss";
+@source "../public";
+@source "./doc.html";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-serif: "Newsreader", ui-serif, Georgia, serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* Hierarchy comes from colour and position, not scale. */
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.875rem;
+
+  --spacing-page: 40rem;
+  --spacing-docs: 64rem;
+  --spacing-gutter: 7rem;
+}
+
+/* Warm near-monochrome. Every colour on the page derives from these tokens. */
+:root {
+  --bg: oklch(100% 0 90);
+  --bg-subtle: oklch(96.4% 0.001 106);
+  --fg: oklch(27.7% 0 90);
+  --fg-muted: oklch(41.1% 0.012 52);
+  --fg-faint: oklch(51.4% 0 90);
+  --border: oklch(91.2% 0.004 106);
+  --accent: oklch(53.1% 0.13 150);
+  --selection: oklch(88% 0.05 150);
+}
+
+.dark {
+  --bg: oklch(21.9% 0.002 68);
+  --bg-subtle: oklch(25.6% 0.004 85);
+  --fg: oklch(92.3% 0.009 85);
+  --fg-muted: oklch(82.8% 0.012 80);
+  --fg-faint: oklch(72.4% 0.012 77);
+  --border: oklch(34.6% 0.006 78);
+  --accent: oklch(78% 0.09 150);
+  --selection: oklch(38% 0.07 150);
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-subtle: var(--bg-subtle);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-faint: var(--fg-faint);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scrollbar-gutter: stable;
+    background-color: var(--bg);
+    color-scheme: light;
+  }
+  html.dark { color-scheme: dark; }
+
+  body {
+    background-color: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: "cv11", "ss01";
+  }
+
+  ::selection { background-color: var(--selection); }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@utility link {
+  color: var(--fg);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in oklch, var(--fg) 28%, transparent);
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  transition: text-decoration-color 150ms ease;
+  &:hover { text-decoration-color: var(--fg); }
+}
+
+/* Inline code inside running text. */
+@utility code {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--fg);
+}
+
+/* Terminal-style block: same paper, one step darker, scrolls rather than wraps. */
+@utility term {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background-color: var(--bg-subtle);
+  padding: 1rem 1.125rem;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  line-height: 1.7;
+  white-space: pre;
+  color: var(--fg-muted);
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+@utility animate-rise {
+  animation: rise 500ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--delay, 0ms);
+}
+
+/* Docs: side nav and rendered Markdown. Same tokens as the landing page. */
+.docs-nav h2 {
+  margin: 1.25rem 0 0.375rem;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--fg-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.docs-nav h2:first-child { margin-top: 0; }
+.docs-nav ul { list-style: none; margin: 0; padding: 0; }
+.docs-nav a {
+  display: block;
+  padding: 0.2rem 0;
+  color: var(--fg-muted);
+  transition: color 150ms ease;
+}
+.docs-nav a:hover, .docs-nav a.active { color: var(--fg); }
+.docs-nav a.active { font-weight: 500; }
+/* Mobile: the nav collapses behind "Menu". Desktop: summary hidden, sidebar sticks and scrolls on its own. */
+.docs-menu summary {
+  display: flex;
+  justify-content: space-between;
+  cursor: pointer;
+  list-style: none;
+  border-block: 1px solid var(--border);
+  padding: 0.625rem 0;
+  color: var(--fg-muted);
+}
+.docs-menu summary::-webkit-details-marker { display: none; }
+.docs-menu summary::after { content: "+"; color: var(--fg-faint); }
+.docs-menu[open] summary::after { content: "\2212"; }
+.docs-menu[open] summary { margin-bottom: 1.25rem; }
+@media (min-width: 48rem) {
+  .docs-menu { position: sticky; top: 2rem; align-self: start; }
+  .docs-menu summary { display: none; }
+  .docs-nav { max-height: calc(100dvh - 4rem); overflow-y: auto; overscroll-behavior: contain; padding-right: 0.5rem; }
+}
+
+/* Thin, quiet scrollbars wherever content scrolls. */
+.docs-nav, .prose pre, .prose .table { scrollbar-width: thin; scrollbar-color: transparent transparent; }
+.docs-nav:hover, .prose pre:hover, .prose .table:hover { scrollbar-color: var(--border) transparent; }
+html { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+
+.prose { max-width: 44rem; line-height: 1.65; }
+.prose h2, .prose h3, .prose h4 { scroll-margin-top: 1.5rem; }
+.prose .anchor { color: inherit; text-decoration: none; }
+/* The # sits outside the flow so hovering a heading never reflows the page. */
+.prose .anchor { position: relative; }
+.prose .anchor::after { content: "#"; position: absolute; left: calc(100% + 0.4em); color: var(--fg-faint); opacity: 0; transition: opacity 150ms ease; }
+.prose .anchor:hover::after { opacity: 1; }
+.prose > :first-child { margin-top: 0; }
+.prose h1 {
+  font-family: var(--font-serif);
+  font-size: 2rem;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  margin: 0 0 1.25rem;
+  color: var(--fg);
+}
+.prose h2 { font-size: 1.125rem; font-weight: 500; margin: 2.25rem 0 0.75rem; color: var(--fg); }
+.prose h3 { font-size: 1rem; font-weight: 500; margin: 1.75rem 0 0.5rem; color: var(--fg); }
+.prose h4 { font-size: var(--text-base); font-weight: 500; margin: 1.25rem 0 0.5rem; color: var(--fg); }
+.prose p, .prose ul, .prose ol { margin: 0.75rem 0; color: var(--fg-muted); }
+.prose ul, .prose ol { padding-left: 1.25rem; }
+.prose li { margin: 0.25rem 0; }
+.prose ul { list-style: disc; }
+.prose ol { list-style: decimal; }
+.prose a { color: var(--fg); text-decoration: underline; text-decoration-color: color-mix(in oklch, var(--fg) 28%, transparent); text-underline-offset: 3px; }
+.prose a:hover { text-decoration-color: var(--fg); }
+.prose strong { color: var(--fg); font-weight: 500; }
+.prose code { font-family: var(--font-mono); font-size: 0.8125rem; color: var(--fg); }
+.prose :not(pre) > code { background: var(--bg-subtle); border-radius: 0.25rem; padding: 0.1rem 0.3rem; }
+.prose pre {
+  overflow-x: auto;
+  margin: 1rem 0;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--bg-subtle);
+  padding: 1rem 1.125rem;
+  font-size: var(--text-xs);
+  line-height: 1.7;
+  color: var(--fg-muted);
+}
+.prose pre code { color: inherit; font-size: inherit; }
+.prose blockquote {
+  margin: 1.25rem 0;
+  border-left: 2px solid var(--accent);
+  padding: 0.25rem 0 0.25rem 1rem;
+}
+.prose blockquote p { margin: 0.25rem 0; }
+.prose .table { overflow-x: auto; margin: 1rem 0; }
+.prose table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+.prose th, .prose td { border-bottom: 1px solid var(--border); padding: 0.5rem 1rem 0.5rem 0; text-align: left; vertical-align: top; }
+.prose th { font-weight: 500; color: var(--fg); }
+.prose td { color: var(--fg-muted); }
+.prose hr { border: 0; border-top: 1px solid var(--border); margin: 2rem 0; }
+.prose img { border-radius: 0.5rem; }
+.prose td code { white-space: nowrap; }
+
+@keyframes blink { 50% { opacity: 0; } }
+.caret { display: inline-block; width: 0.5em; height: 1.1em; margin-left: 1px; vertical-align: text-bottom; background: var(--fg-muted); animation: blink 1s steps(1) infinite; }
+[data-demo] { white-space: pre-wrap; }

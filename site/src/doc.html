@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>%TITLE% · nod docs</title>
+  <meta name="description" content="%DESCRIPTION%">
+  <link rel="canonical" href="%CANONICAL%">
+  <meta name="robots" content="index, follow">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="nod">
+  <meta property="og:url" content="%CANONICAL%">
+  <meta property="og:title" content="%TITLE% · nod docs">
+  <meta property="og:description" content="%DESCRIPTION%">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:image" content="%SITE_URL%/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="nod: a coding agent on the subscription you already pay for">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="%TITLE% · nod docs">
+  <meta name="twitter:description" content="%DESCRIPTION%">
+  <meta name="twitter:image" content="%SITE_URL%/og.png">
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1b1a19">
+  <script type="application/ld+json">%JSONLD%</script>
+  <link rel="icon" href="%SITE_URL%/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="%SITE_URL%/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="%SITE_URL%/apple-touch-icon.png">
+  <link rel="alternate" type="text/markdown" href="%MARKDOWN%">
+  <script>
+    try {
+      const t = localStorage.getItem("theme");
+      if (t === "dark" || (!t && matchMedia("(prefers-color-scheme: dark)").matches)) {
+        document.documentElement.classList.add("dark");
+      }
+    } catch {}
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Newsreader:opsz,wght@6..72,400&display=optional" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="%SITE_URL%/styles.css">
+</head>
+<body class="min-h-dvh">
+  <a href="#main" class="sr-only rounded-md bg-bg px-3 py-2 text-fg focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50">Skip to content</a>
+
+  <header class="mx-auto flex max-w-docs flex-wrap items-center justify-between gap-x-6 gap-y-3 px-6 pt-8 sm:pt-10">
+    <a href="%SITE_URL%/" class="font-medium text-fg transition-opacity hover:opacity-60">nod</a>
+    <div class="flex items-center gap-4">
+      <nav aria-label="Site" class="-mx-2.5 flex items-center gap-0.5">
+        <a href="%SITE_URL%/docs" class="rounded-full px-2.5 py-1 text-fg-muted transition-colors hover:bg-bg-subtle hover:text-fg">Docs</a>
+        <a href="%SITE_URL%/docs/using-nod/cli" class="rounded-full px-2.5 py-1 text-fg-muted transition-colors hover:bg-bg-subtle hover:text-fg">CLI</a>
+        <a href="%SITE_URL%/docs/lib" class="rounded-full px-2.5 py-1 text-fg-muted transition-colors hover:bg-bg-subtle hover:text-fg">SDK</a>
+        <a href="https://github.com/anturno/nod" class="rounded-full px-2.5 py-1 text-fg-muted transition-colors hover:bg-bg-subtle hover:text-fg">GitHub</a>
+      </nav>
+      <button id="theme" type="button" aria-label="Switch theme" class="-m-1.5 cursor-pointer rounded-md p-1.5 text-fg-muted transition-colors hover:text-fg">
+        <svg class="dark:hidden" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+        <svg class="hidden dark:block" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="mx-auto max-w-docs px-6 pt-10 pb-20 md:grid md:grid-cols-[13rem_minmax(0,1fr)] md:gap-12">
+    <details class="docs-menu mb-10 md:mb-0" open>
+      <summary>Menu</summary>
+      <nav aria-label="Documentation" class="docs-nav">
+%NAV%
+      </nav>
+    </details>
+    <script>
+      // Runs before first paint: collapse the menu on small screens, and keep the sidebar where it was on the last page.
+      (() => {
+        const menu = document.currentScript.previousElementSibling;
+        if (!matchMedia("(min-width: 48rem)").matches) return void (menu.open = false);
+        const nav = menu.querySelector(".docs-nav");
+        try { nav.scrollTop = +sessionStorage.getItem("docs-nav") || 0; } catch {}
+        addEventListener("pagehide", () => { try { sessionStorage.setItem("docs-nav", nav.scrollTop); } catch {} });
+      })();
+    </script>
+    <main id="main" class="prose min-w-0">
+%BODY%
+      <p class="mt-12 text-fg-faint"><a href="%MARKDOWN%" class="link">View this page as Markdown</a> · <a href="%SITE_URL%/llms.txt" class="link">llms.txt</a></p>
+    </main>
+  </div>
+
+  <footer class="mx-auto max-w-docs px-6 pb-16">
+    <div class="flex flex-wrap gap-x-4 gap-y-1 text-fg-faint">
+      <a href="https://github.com/anturno/nod/blob/main/CHANGELOG.md" class="transition-colors hover:text-fg">changelog</a>
+      <a href="https://github.com/anturno/nod" class="transition-colors hover:text-fg">source</a>
+      <a href="%SITE_URL%/docs" class="transition-colors hover:text-fg">docs</a>
+    </div>
+    <p class="mt-6 text-fg-faint">Apache-2.0 · <a href="https://github.com/anturno" class="transition-colors hover:text-fg">Anturno</a></p>
+  </footer>
+  <script src="%SITE_URL%/main.js" defer></script>
+</body>
+</html>
